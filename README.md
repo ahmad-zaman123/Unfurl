@@ -6,11 +6,11 @@
 single call — dynamic titles, themes, and logos, signed and cached, ready to drop into a
 meta tag.
 
-<!-- After deploying, fill these in:
-**🔗 Live demo: [unfurl-…vercel.app](https://…)**
+**🔗 Live demo: [unfurl-one.vercel.app](https://unfurl-one.vercel.app)**
 
 > **Try it** — sign in with **`demo@unfurl.app`** / **`demo1234`**.
--->
+> The account is pre-loaded with API keys and two weeks of usage, so the analytics
+> dashboard is populated the moment you log in.
 
 A **Django REST** backend (`Backend/`) and a **React + Vite** dashboard (`Frontend/`) in one
 repo. The interesting part isn't the image — it's the platform around it: hashed API keys,
