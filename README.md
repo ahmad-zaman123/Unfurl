@@ -1,6 +1,6 @@
 # Unfurl
 
-[![CI](https://github.com/USER/Unfurl/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/Unfurl/actions/workflows/ci.yml)
+[![CI](https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml)
 
 **Social preview images as an API.** Generate the `og:image` card for any link with a
 single call — dynamic titles, themes, and logos, signed and cached, ready to drop into a
