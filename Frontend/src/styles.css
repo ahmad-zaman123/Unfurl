@@ -97,8 +97,21 @@ code { font-family: var(--code); font-size: 0.9em; }
 .pill-revoked { color: var(--muted); border-color: var(--rule); text-decoration: line-through; }
 
 /* playground */
-.playground { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: clamp(1.2rem, 3vw, 2.5rem); }
-@media (max-width: 62rem) { .playground { grid-template-columns: minmax(0, 1fr); } }
+.playground {
+  display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  grid-template-areas: "form proof" "form output";
+  gap: clamp(1.2rem, 3vw, 2.5rem); align-items: start;
+}
+.pg-form { grid-area: form; }
+.pg-proof { grid-area: proof; }
+.pg-output { grid-area: output; }
+/* Below this width the proof leads, and stays in view while you change the fields. */
+@media (max-width: 62rem) {
+  .playground { display: flex; flex-direction: column; align-items: stretch; }
+  .pg-proof { order: -1; position: sticky; top: 0; z-index: 3; background: var(--sheet); padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
+  .pg-proof .proof { padding: 0.9rem; }
+  .pg-output { order: 2; }
+}
 .pg-form { display: flex; flex-direction: column; gap: 0.85rem; }
 .pg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
 .field { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); }
@@ -112,7 +125,7 @@ code { font-family: var(--code); font-size: 0.9em; }
 .color-row input[type="color"] { width: 3rem; padding: 0.15rem; cursor: pointer; }
 .color-row code { color: var(--ink-2); text-transform: none; letter-spacing: 0; }
 
-.pg-preview { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.pg-proof, .pg-output { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
 
 /* the proof: crop marks and a registration cross around the printed card */
 .proof { position: relative; margin: 0; padding: 1.5rem; }
