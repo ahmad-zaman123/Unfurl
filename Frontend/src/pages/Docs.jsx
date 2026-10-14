@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Brand from "../components/Brand.jsx";
 import CodeBlock from "../components/CodeBlock.jsx";
 import { API_BASE as API } from "../lib.js";
+import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
 const PARAMS = [
   ["template", "generic · article · product · event"],
@@ -22,6 +23,7 @@ function Code({ children, label = "Example" }) {
 }
 
 export default function Docs() {
+  useDocumentTitle("Quickstart");
   return (
     <div className="docs">
       <header className="landing-nav">

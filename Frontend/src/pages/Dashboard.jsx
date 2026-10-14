@@ -6,8 +6,10 @@ import ApiKeys from "../components/ApiKeys.jsx";
 import Brand from "../components/Brand.jsx";
 import Playground from "../components/Playground.jsx";
 import Usage from "../components/Usage.jsx";
+import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
 export default function Dashboard() {
+  useDocumentTitle("Dashboard");
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
@@ -42,6 +44,7 @@ export default function Dashboard() {
       </header>
 
       <main className="dashboard">
+        <h1 className="sr-only">Dashboard</h1>
         <Playground />
         <div className="dashboard-split">
           <Usage />

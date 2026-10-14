@@ -196,7 +196,7 @@ export default function Playground() {
           </label>
         </div>
 
-        <div className="pg-preview">
+        <div className="pg-proof">
           <Proof caption={<span>1200 × 630 · og:image</span>}>
             <div className={"proof-sheet" + (stale ? " is-stale" : "") + (!everShown && phase === "rendering" ? " is-loading" : "")}>
               {/* Until the first proof is drawn, show the shape of a card rather than a blank box. */}
@@ -238,7 +238,9 @@ export default function Playground() {
               {error}
             </div>
           )}
+        </div>
 
+        <div className="pg-output">
           <div className="url-bar">
             <code title={url}>{url || "The signed URL appears here"}</code>
             <button className="btn primary small" onClick={copyUrl} disabled={!url}>

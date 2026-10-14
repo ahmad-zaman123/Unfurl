@@ -21,7 +21,7 @@ export default function CodeBlock({ label, children }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre>
+      <pre tabIndex={0} role="region" aria-label={label + " (scrollable)"}>
         <code>{children}</code>
       </pre>
     </div>

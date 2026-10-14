@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import BackLink from "../components/BackLink.jsx";
 import Brand from "../components/Brand.jsx";
+import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
 const DEMO_EMAIL = "demo@unfurl.app";
 const DEMO_PASSWORD = "demo1234";
@@ -27,6 +28,7 @@ function EyeIcon({ off }) {
 }
 
 export default function Login() {
+  useDocumentTitle("Sign in");
   const navigate = useNavigate();
   const { state } = useLocation();
   const [isRegister, setIsRegister] = useState(Boolean(state?.register));

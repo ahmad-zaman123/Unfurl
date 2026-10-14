@@ -28,6 +28,7 @@ export default function Usage() {
   if (!data) return null;
 
   const { summary, series } = data;
+  const total = series.reduce((sum, point) => sum + point.count, 0);
   const max = Math.max(1, ...series.map((point) => point.count));
   const quotaPct = Math.min(100, Math.round((summary.month_used / summary.month_quota) * 100));
   const planLabel = summary.plan.charAt(0).toUpperCase() + summary.plan.slice(1);
@@ -46,7 +47,7 @@ export default function Usage() {
         <StatTile label="Total calls" value={summary.total_calls.toLocaleString()} />
         <StatTile label="Today" value={summary.calls_today.toLocaleString()} />
         <StatTile label="Active keys" value={summary.active_keys} />
-        <StatTile label="Cache hit rate" value={summary.cache.hit_rate + "%"} />
+        <StatTile label="Cache hits" value={summary.cache.hit_rate + "%"} />
       </div>
 
       <div className="quota">
@@ -69,28 +70,42 @@ export default function Usage() {
         {note && <div className={"quota-note " + level}>{note}</div>}
       </div>
 
-      <div
-        className="usage-chart"
-        role="img"
-        aria-label={
-          "Calls per day from " + shortDate(series[0].date) + " to " + shortDate(series[series.length - 1].date) +
-          ", peak " + max.toLocaleString()
-        }
-      >
-        {series.map((point) => (
+      {total === 0 ? (
+        <p className="note">
+          No calls in the last {series.length} days. Make a request with an API key and it shows up here.
+        </p>
+      ) : (
+        <>
           <div
-            key={point.date}
-            className="usage-bar"
-            style={{ height: Math.max(2, Math.round((point.count / max) * 100)) + "%" }}
-            title={shortDate(point.date) + ": " + point.count.toLocaleString() + " calls"}
-          />
-        ))}
-      </div>
-      <div className="usage-axis">
-        <span>{shortDate(series[0].date)}</span>
-        <span>Peak {max.toLocaleString()} calls a day</span>
-        <span>{shortDate(series[series.length - 1].date)}</span>
-      </div>
+            className="usage-chart"
+            role="img"
+            aria-label={
+              "Calls per day from " +
+              shortDate(series[0].date) +
+              " to " +
+              shortDate(series[series.length - 1].date) +
+              ", peak " +
+              max.toLocaleString()
+            }
+          >
+            {series.map((point) => (
+              <div
+                key={point.date}
+                className="usage-bar"
+                style={{ height: Math.max(2, Math.round((point.count / max) * 100)) + "%" }}
+                title={shortDate(point.date) + ": " + point.count.toLocaleString() + " calls"}
+              />
+            ))}
+          </div>
+          <div className="usage-axis">
+            <span>{shortDate(series[0].date)}</span>
+            <span>
+              Peak {max.toLocaleString()} {max === 1 ? "call" : "calls"} a day
+            </span>
+            <span>{shortDate(series[series.length - 1].date)}</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
