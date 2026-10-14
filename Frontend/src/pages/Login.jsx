@@ -58,7 +58,7 @@ export default function Login() {
     <div className="auth-screen">
       <form className="auth-card" onSubmit={handleSubmit}>
         <BackLink />
-        <Brand />
+        <Brand to="/" />
         <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
         <p className="auth-subtitle">Social preview images as an API.</p>
 

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export function LogoMark({ size = 22 }) {
   return (
     <svg className="logo-mark" viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden="true">
@@ -12,11 +14,19 @@ export function LogoMark({ size = 22 }) {
   );
 }
 
-export default function Brand() {
-  return (
-    <span className="brand">
+/** The wordmark. Pass `to` to make it a link (it is a plain label by default). */
+export default function Brand({ to }) {
+  const content = (
+    <>
       <LogoMark />
       Unfurl
-    </span>
+    </>
+  );
+  return to ? (
+    <Link to={to} className="brand" aria-label="Unfurl home">
+      {content}
+    </Link>
+  ) : (
+    <span className="brand">{content}</span>
   );
 }
