@@ -38,6 +38,7 @@ export default function Playground() {
   const [phase, setPhase] = useState("rendering"); // rendering | ready | error
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [everShown, setEverShown] = useState(false); // has any proof been drawn yet?
 
   function update(key, value) {
     setSpec((prev) => ({ ...prev, [key]: value }));
@@ -197,21 +198,38 @@ export default function Playground() {
 
         <div className="pg-preview">
           <Proof caption={<span>1200 × 630 · og:image</span>}>
-            <div className={"proof-sheet" + (stale ? " is-stale" : "")}>
-              {url ? (
+            <div className={"proof-sheet" + (stale ? " is-stale" : "") + (!everShown && phase === "rendering" ? " is-loading" : "")}>
+              {/* Until the first proof is drawn, show the shape of a card rather than a blank box. */}
+              {!everShown && (
+                <div className="proof-ghost" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              )}
+              {url && (
                 <img
                   src={url}
                   alt="Live preview of the generated card"
-                  onLoad={() => setPhase("ready")}
+                  onLoad={() => {
+                    setPhase("ready");
+                    setEverShown(true);
+                  }}
                   onError={() => {
                     setPhase("error");
                     setError("The image URL did not load. Try again in a moment.");
                   }}
                 />
-              ) : (
-                <div className="proof-empty">{params.title ? "Rendering the first proof…" : "Add a title to render a card."}</div>
               )}
-              {phase === "rendering" && url && <span className="proof-status" role="status">Rendering…</span>}
+              {!everShown && phase !== "error" && (
+                <p className="proof-empty" role="status">
+                  {params.title
+                    ? "Rendering your first proof. The first one can take a few seconds."
+                    : "Add a title to render a card."}
+                </p>
+              )}
+              {everShown && phase === "rendering" && <span className="proof-status" role="status">Rendering…</span>}
             </div>
           </Proof>
 
