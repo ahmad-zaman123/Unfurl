@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { api } from "../api.js";
+import BackLink from "../components/BackLink.jsx";
 import Brand from "../components/Brand.jsx";
 
 const DEMO_EMAIL = "demo@unfurl.app";
@@ -56,6 +57,7 @@ export default function Login() {
   return (
     <div className="auth-screen">
       <form className="auth-card" onSubmit={handleSubmit}>
+        <BackLink />
         <Brand />
         <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
         <p className="auth-subtitle">Social preview images as an API.</p>

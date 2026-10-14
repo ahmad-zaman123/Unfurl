@@ -220,3 +220,11 @@ code { font-family: var(--code); font-size: 0.9em; }
 @media (max-width: 62rem) { .dashboard-split { grid-template-columns: minmax(0, 1fr); } }
 
 @media (max-width: 40rem) { .topbar-right .muted { display: none; } }
+
+/* back link on the sign-in screen */
+.back-link {
+  display: inline-flex; align-items: center; gap: 0.4rem; align-self: flex-start;
+  min-height: 2.25rem; margin: -0.35rem 0 0 -0.1rem; padding: 0 0.1rem;
+  color: var(--muted); font-weight: 600; font-size: 0.92rem; text-decoration: none;
+}
+.back-link:hover { color: var(--ink); }
