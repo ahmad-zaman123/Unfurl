@@ -25,20 +25,21 @@ export default function Usage() {
       .catch(() => {});
   }, []);
 
-  if (!data) {
-    return null;
-  }
+  if (!data) return null;
 
   const { summary, series } = data;
   const max = Math.max(1, ...series.map((point) => point.count));
   const quotaPct = Math.min(100, Math.round((summary.month_used / summary.month_quota) * 100));
   const planLabel = summary.plan.charAt(0).toUpperCase() + summary.plan.slice(1);
+  const level = quotaPct >= 90 ? "over" : quotaPct >= 75 ? "warn" : "ok";
+  const note =
+    level === "over" ? "Near the monthly limit" : level === "warn" ? "Approaching the monthly limit" : "";
 
   return (
     <div className="panel">
       <div className="panel-head">
         <h2>Usage</h2>
-        <span className="pill pill-plan">{planLabel} plan</span>
+        <span className="pill">{planLabel} plan</span>
       </div>
 
       <div className="stat-row">
@@ -50,28 +51,44 @@ export default function Usage() {
 
       <div className="quota">
         <div className="quota-head">
-          <span className="muted">Monthly quota</span>
-          <span className="muted">
-            {summary.month_used.toLocaleString()} / {summary.month_quota.toLocaleString()}
+          <span>Monthly quota</span>
+          <span>
+            {summary.month_used.toLocaleString()} of {summary.month_quota.toLocaleString()} ({quotaPct}%)
           </span>
         </div>
-        <div className="quota-track">
-          <div className="quota-fill" style={{ width: quotaPct + "%" }} />
+        <div
+          className="quota-track"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={quotaPct}
+          aria-label="Monthly quota used"
+        >
+          <div className={"quota-fill " + level} style={{ width: quotaPct + "%" }} />
         </div>
+        {note && <div className={"quota-note " + level}>{note}</div>}
       </div>
 
-      <div className="usage-chart">
+      <div
+        className="usage-chart"
+        role="img"
+        aria-label={
+          "Calls per day from " + shortDate(series[0].date) + " to " + shortDate(series[series.length - 1].date) +
+          ", peak " + max.toLocaleString()
+        }
+      >
         {series.map((point) => (
           <div
             key={point.date}
             className="usage-bar"
-            style={{ height: Math.round((point.count / max) * 100) + "%" }}
-            title={shortDate(point.date) + ": " + point.count}
+            style={{ height: Math.max(2, Math.round((point.count / max) * 100)) + "%" }}
+            title={shortDate(point.date) + ": " + point.count.toLocaleString() + " calls"}
           />
         ))}
       </div>
       <div className="usage-axis">
         <span>{shortDate(series[0].date)}</span>
+        <span>Peak {max.toLocaleString()} calls a day</span>
         <span>{shortDate(series[series.length - 1].date)}</span>
       </div>
     </div>

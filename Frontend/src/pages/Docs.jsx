@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
-const API = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8010").replace(/\/+$/, "");
+import Brand from "../components/Brand.jsx";
+import CodeBlock from "../components/CodeBlock.jsx";
+import { API_BASE as API } from "../lib.js";
 
 const PARAMS = [
   ["template", "generic · article · product · event"],
@@ -15,16 +17,16 @@ const PARAMS = [
   ["logo", "http(s) image URL, composited top-right (SSRF-guarded)"],
 ];
 
-function Code({ children }) {
-  return <pre className="docs-code">{children}</pre>;
+function Code({ children, label = "Example" }) {
+  return <CodeBlock label={label}>{children}</CodeBlock>;
 }
 
 export default function Docs() {
   return (
     <div className="docs">
       <header className="landing-nav">
-        <Link to="/" className="landing-logo docs-home">
-          <span className="brand">Unfurl</span>
+        <Link to="/" aria-label="Unfurl home" style={{ textDecoration: "none" }}>
+          <Brand />
         </Link>
         <Link to="/login" className="link-btn">
           Sign in
@@ -49,7 +51,7 @@ export default function Docs() {
         <p className="muted">
           POST a spec with your key. The response is a signed, cacheable image URL.
         </p>
-        <Code>{`curl -X POST ${API}/api/v1/cards \\
+        <Code label="Request">{`curl -X POST ${API}/api/v1/cards \\
   -H "Authorization: Bearer sk_live_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -63,7 +65,7 @@ export default function Docs() {
 # → { "url": "${API}/api/v1/og?...&sig=..." }`}</Code>
 
         <h2>3. Use it in your HTML</h2>
-        <Code>{`<meta property="og:image" content="${API}/api/v1/og?...&sig=..." />`}</Code>
+        <Code label="HTML">{`<meta property="og:image" content="${API}/api/v1/og?...&sig=..." />`}</Code>
         <p className="muted">
           The image URL is signed, so its parameters can&apos;t be tampered with, and it
           is cached after the first render.
