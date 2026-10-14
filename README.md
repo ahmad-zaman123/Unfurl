@@ -1,105 +1,224 @@
-# Unfurl
+<h1 align="center">🖼️ Unfurl</h1>
 
-[![CI](https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml)
+<p align="center">
+  <b>Social preview images as an API.</b><br/>
+  Generate the <code>og:image</code> card for any link with one call: dynamic titles, themes and logos, signed and cached.
+</p>
 
-**Social preview images as an API.** Generate the `og:image` card for any link with a
-single call — dynamic titles, themes, and logos, signed and cached, ready to drop into a
-meta tag.
+<p align="center">
+  <a href="https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml"><img src="https://github.com/ahmad-zaman123/Unfurl/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://unfurl-one.vercel.app"><img src="https://img.shields.io/badge/live-demo-000?logo=vercel&logoColor=white&style=flat-square" alt="Live demo" /></a>
+  <img src="https://img.shields.io/badge/Django-4.2-092E20?logo=django&logoColor=white&style=flat-square" alt="Django 4.2" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 19" />
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white&style=flat-square" alt="Vite" />
+  <img src="https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis&logoColor=white&style=flat-square" alt="Redis" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
+</p>
 
-**🔗 Live demo: [unfurl-one.vercel.app](https://unfurl-one.vercel.app)**
+<p align="center">
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="#-how-it-works">How it works</a> ·
+  <a href="#-features">Features</a> ·
+  <a href="#-api">API</a> ·
+  <a href="#-limits">Limits</a> ·
+  <a href="#-deployment--ci">Deployment</a>
+</p>
 
-> **Try it** — sign in with **`demo@unfurl.app`** / **`demo1234`**.
-> The account is pre-loaded with API keys and two weeks of usage, so the analytics
-> dashboard is populated the moment you log in.
+<!-- Hero image: add docs/screenshots/card.png (a generated 1200x630 card) and docs/screenshots/dashboard.png, then uncomment:
+<p align="center">
+  <img src="docs/screenshots/card.png" alt="A generated social card" width="640" />
+</p>
+-->
 
-A **Django REST** backend (`Backend/`) and a **React + Vite** dashboard (`Frontend/`) in one
-repo. The interesting part isn't the image — it's the platform around it: hashed API keys,
-HMAC-signed URLs, per-key rate limiting, plan quotas, usage analytics, and an SSRF-guarded
-image fetcher. Deploys to Vercel with Neon Postgres and Upstash Redis.
+---
 
-## What it does
+## 🧭 What is Unfurl?
 
-You authenticate to **mint** a card, and get back a **signed public URL**:
+You authenticate once to **mint** a card, and get back a **signed public URL**. That URL goes straight into `<meta property="og:image">`: it needs no auth (crawlers can't send a token), it is tamper-proof, and it is cached after the first render.
 
-```
-POST /api/v1/cards   (Authorization: Bearer sk_live_…)   →  { "url": ".../api/v1/og?…&sig=…" }
-```
+The image itself isn't the interesting part. The platform around it is: hashed API keys, HMAC-signed URLs, per-key rate limiting, plan quotas, usage analytics and an SSRF-guarded image fetcher.
 
-That URL is what goes in `<meta property="og:image">`. It needs no auth (crawlers can't send
-a token), it's tamper-proof (signed), and it's cached after the first render.
+| 🎨 Create | 🔗 Serve | 📈 Observe |
+|---|---|---|
+| Authenticated `POST` with title, template, theme, accent and logo | Public, signed, cacheable image URL for any `og:image` tag | Per-key usage, rate-limit headers and monthly quota in a dashboard |
 
-## Why this project
+## 🚀 Quick start
 
-Most "OG image generator" demos stop at drawing text. Unfurl is built around the problems a
-real image API has to solve — each implemented deliberately and covered by the flow.
+**Prerequisites:** Python 3.11 and Node 20 (what CI uses). No Postgres or Redis needed locally: dev runs on SQLite and an in-memory cache.
 
-### 1. The create/serve split — because `og:image` is a bare URL
-
-A crawler fetching `<meta property="og:image" content="…">` does a plain GET with **no
-headers**. So an authenticated "return a PNG" endpoint can't actually be used in a meta tag.
-Unfurl separates **create** (authenticated, mints a URL) from **serve** (public, cacheable),
-which is the only model that works in practice.
-
-### 2. HMAC-signed URLs that double as the cache key
-
-The served URL carries an HMAC signature over its parameters. The public endpoint **rejects
-any unsigned or tampered request** (change one character of the title → `403`). Because the
-signature is a deterministic hash of the params, it's also a perfect **content-cache key** —
-identical cards render once, then serve from cache (`X-Cache: HIT`).
-
-### 3. API keys done like Stripe
-
-Keys are stored as a **SHA-256 hash** with only a display prefix (`sk_live_ab12…`); the raw
-key is shown exactly once. A custom DRF authentication class handles `Authorization: Bearer
-sk_…` and cleanly coexists with the dashboard's JWT auth on the same header.
-
-### 4. Per-key rate limiting + plan quotas
-
-A fixed-window limiter (atomic cache `incr`, Redis in prod) enforces per-minute and per-day
-limits per key, returning standard `X-RateLimit-*` and `Retry-After` headers. A per-account
-**monthly quota** is enforced by plan (Free/Pro). Only API-key traffic is metered — dashboard
-previews stay unlimited.
-
-### 5. SSRF-guarded logo fetching
-
-The `logo` parameter fetches a remote image. The fetcher resolves the host and **rejects any
-non-public IP** (loopback, private ranges, and `169.254.x` cloud-metadata), allows only
-`http(s)`, **refuses redirects**, and caps size and time. Fetch failures are fail-safe — the
-card just renders without the logo.
-
-## Tech stack
-
-**Backend:** Python 3.11 · Django 4.2 · Django REST Framework · Pillow · JWT (`simplejwt`) ·
-OpenAPI/Swagger (`drf-spectacular`)
-
-**Frontend:** React 19 · Vite · React Router
-
-**Deploy:** Vercel (serverless Python + static React) · Neon Postgres · Upstash Redis
-
-## API
-
-Interactive Swagger docs at `/api/docs/`, and a quickstart at `/docs` in the app.
-
-## Local setup
-
-Runs on SQLite and local-memory cache out of the box — no Postgres or Redis needed for dev.
-
-### Backend
+**1. Backend** → `http://localhost:8010`
 
 ```bash
 cd Backend
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 cp .env.example .env
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py runserver 8010
+python manage.py migrate
+python scripts/seed_demo.py       # optional: demo account with keys and two weeks of usage
+python manage.py runserver 8010
 ```
 
-### Frontend
+**2. Frontend** → `http://localhost:5175`
 
 ```bash
 cd Frontend
 npm install
-cp .env.example .env          # VITE_API_URL points at the backend (default: localhost:8010)
-npm run dev                   # http://localhost:5175
+cp .env.example .env              # VITE_API_URL=http://127.0.0.1:8010
+npm run dev
 ```
+
+<details>
+<summary><b>🔧 Environment variables</b> (<code>Backend/.env</code>)</summary>
+<br/>
+
+| Key | Required | Notes |
+|---|---|---|
+| `SECRET_KEY` | **yes** | Django secret key. Use a long random string. |
+| `DATABASE_URL` | no | Defaults to `sqlite:///db.sqlite3`. Production: a Neon Postgres URL. |
+| `REDIS_URL` | prod | Rate-limit counters and the image cache. Empty means local memory, which is dev only. Format: `rediss://:<pass>@<host>:<port>`. |
+| `CARD_SIGNING_SECRET` | recommended | Secret that signs public image URLs. Falls back to `SECRET_KEY`. |
+| `UNFURL_PUBLIC_BASE_URL` | prod | Public origin used when building served image URLs. Defaults to the request host. |
+| `CORS_ALLOWED_ORIGINS` | no | Comma-separated frontend origins. Defaults to the local Vite server. |
+| `CSRF_TRUSTED_ORIGINS` | prod | Comma-separated, used by `config.settings.prod`. |
+| `DEBUG` | no | `True` for local dev. |
+
+Frontend: `VITE_API_URL` points at the backend.
+
+</details>
+
+<details>
+<summary><b>🔑 Demo account</b> (live site)</summary>
+<br/>
+
+Sign in with **`demo@unfurl.app`** / **`demo1234`**. It is pre-loaded with API keys and two weeks of usage, so the analytics dashboard has data on first login.
+
+</details>
+
+## 🧩 How it works
+
+```
+ your server ── POST /api/v1/cards (Bearer sk_live_…) ──▶  Unfurl API
+                                                              │ signs params (HMAC)
+                ◀──────── { "url": ".../api/v1/og?…&sig=…" } ─┘
+
+ <meta property="og:image" content=".../api/v1/og?…&sig=…">
+        │
+ crawler │  plain GET, no headers
+        ▼
+   /api/v1/og ──▶ verify signature ──▶ cache hit? ──▶ PNG (1200×630)
+                       │ bad sig → 403        └─ miss → render with Pillow, store
+```
+
+A crawler fetching an `og:image` does a bare `GET` with no headers, so an authenticated "return a PNG" endpoint can't be used in a meta tag. Unfurl separates **create** (authenticated, mints a URL) from **serve** (public, cacheable), which is the only model that works.
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔏 HMAC-signed URLs
+The served URL carries a signature over its parameters. Any unsigned or tampered request gets a `403`. The signature doubles as the cache key, so identical cards render once and then serve from cache (`X-Cache: HIT`).
+
+### 🔑 API keys done like Stripe
+Stored as a **SHA-256 hash** with only a display prefix (`sk_live_ab12…`). The raw key is shown exactly once. A custom DRF authentication class handles `Authorization: Bearer sk_…` and coexists with the dashboard's JWT.
+
+### 📈 Usage analytics
+A React dashboard shows total and daily calls, usage per key, cache stats and your monthly quota against your plan.
+
+</td>
+<td width="50%" valign="top">
+
+### 🚦 Rate limits and quotas
+Fixed-window limiter (atomic cache `incr`, Redis in prod) per key, returning `X-RateLimit-*` and `Retry-After`. A per-account monthly quota is enforced by plan. Only API-key traffic is metered, so dashboard previews stay unlimited.
+
+### 🛡️ SSRF-guarded logo fetching
+The `logo` parameter fetches a remote image. The fetcher resolves the host and rejects any non-public IP (loopback, private ranges, `169.254.x` cloud metadata), allows only `http(s)`, **refuses redirects** and caps size and time. A failed fetch just renders the card without a logo.
+
+### 🎨 Templates and themes
+Four templates and three themes, with a custom accent colour.
+
+</td>
+</tr>
+</table>
+
+## 🔌 API
+
+Interactive docs at **`/api/docs/`** (Swagger) and a quickstart at **`/docs`** in the app.
+
+```bash
+curl -X POST https://<your-host>/api/v1/cards \
+  -H "Authorization: Bearer sk_live_…" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Hello, world", "template": "article", "theme": "dark"}'
+# → { "url": "https://<your-host>/api/v1/og?…&sig=…" }
+```
+
+Drop the returned `url` into `<meta property="og:image" content="…">`.
+
+### Card parameters
+
+| Field | Required | Values |
+|---|---|---|
+| `title` | **yes** | Up to 200 characters. Auto-sized, up to four lines. |
+| `template` | no | `generic` (default), `article`, `product`, `event` |
+| `theme` | no | `brand` (default), `light`, `dark` |
+| `accent` | no | Hex colour such as `#2563eb` (default) |
+| `subtitle` | no | Up to 200 characters |
+| `eyebrow`, `footer`, `price`, `date`, `location` | no | Up to 120 characters each |
+| `logo` | no | `http(s)` URL of a public image |
+
+### Endpoints
+
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `POST /api/v1/cards` | API key | Mint a signed card URL |
+| `GET /api/v1/og` | none (signed URL) | Serve the image |
+| `GET`, `POST /api/keys/` | JWT | List or create API keys |
+| `DELETE /api/keys/<id>/` | JWT | Revoke a key |
+| `GET /api/usage/` | JWT | Usage analytics |
+| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+
+## 🚦 Limits
+
+| Plan | Per minute | Per day | Per month |
+|---|---|---|---|
+| **Free** | 60 | 5,000 | 50,000 |
+| **Pro** | 600 | 100,000 | 2,000,000 |
+
+Per-minute and per-day limits apply per key. The monthly quota is summed across all of an account's keys.
+
+## 🛠️ Tech stack
+
+| Layer | Tech |
+|---|---|
+| **Backend** | Python 3.11, Django 4.2, Django REST Framework, Pillow, `simplejwt`, `drf-spectacular` |
+| **Frontend** | React 19, Vite, React Router |
+| **Data** | SQLite (local), Neon Postgres (prod), Redis via Upstash (prod cache and rate limits) |
+| **Deployment** | Vercel (serverless Python + static React) |
+
+## 🗂️ Project structure
+
+```
+Unfurl/
+├── Backend/
+│   ├── apps/
+│   │   ├── cards/          renderer, signing, SSRF-safe fetch, cache
+│   │   ├── apikeys/        key model, auth class, rate limiter
+│   │   ├── users/          accounts, plans, JWT
+│   │   └── core/           shared models
+│   ├── config/settings/    base · dev · prod
+│   └── scripts/seed_demo.py
+├── Frontend/               dashboard, docs and landing pages
+└── .github/workflows/      ci.yml · redis-keepalive.yml
+```
+
+## ☁️ Deployment & CI
+
+- **Vercel**, with Neon Postgres and Upstash Redis. Set `REDIS_URL`, `DATABASE_URL`, `SECRET_KEY` and `CARD_SIGNING_SECRET` in production.
+- **CI** (`ci.yml`) runs `manage.py check`, a missing-migrations check and the frontend build on every push and pull request.
+- **Redis keep-alive** (`redis-keepalive.yml`) writes a key to Upstash every 7 days so the database doesn't sit idle. It needs a `REDIS_URL` repository secret.
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Ahmad Zaman
