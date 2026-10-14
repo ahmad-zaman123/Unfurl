@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { api } from "../api.js";
+import Brand from "../components/Brand.jsx";
 
 const DEMO_EMAIL = "demo@unfurl.app";
 const DEMO_PASSWORD = "demo1234";
@@ -55,7 +56,8 @@ export default function Login() {
   return (
     <div className="auth-screen">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <div className="brand">Unfurl</div>
+        <Brand />
+        <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
         <p className="auth-subtitle">Social preview images as an API.</p>
 
         {isRegister && (
@@ -63,6 +65,7 @@ export default function Login() {
             <span>Full name</span>
             <input
               type="text"
+              autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Ada Lovelace"
@@ -75,6 +78,7 @@ export default function Login() {
           <input
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -88,9 +92,10 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               required
               minLength={8}
+              autoComplete={isRegister ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="At least 8 characters"
             />
             <button
               type="button"
@@ -104,22 +109,40 @@ export default function Login() {
           </div>
         </label>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+          </div>
+        )}
 
         <button className="btn primary" type="submit" disabled={busy}>
-          {busy ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
+          {busy ? "One moment…" : isRegister ? "Create account" : "Sign in"}
         </button>
 
-        <button
-          type="button"
-          className="link-btn"
-          onClick={() => {
-            setError("");
-            setIsRegister(!isRegister);
-          }}
-        >
-          {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
-        </button>
+        <div className="auth-alt">
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              setError("");
+              setIsRegister(!isRegister);
+            }}
+          >
+            {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
+          </button>
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              setIsRegister(false);
+              setEmail(DEMO_EMAIL);
+              setPassword(DEMO_PASSWORD);
+              setError("");
+            }}
+          >
+            Use the demo account
+          </button>
+        </div>
       </form>
     </div>
   );
