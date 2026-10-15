@@ -24,11 +24,13 @@
   <a href="#-deployment--ci">Deployment</a>
 </p>
 
-<!-- Hero image: add docs/screenshots/card.png (a generated 1200x630 card) and docs/screenshots/dashboard.png, then uncomment:
 <p align="center">
   <img src="docs/screenshots/card.png" alt="A generated social card" width="640" />
 </p>
--->
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="The Unfurl console: live card preview, the signed URL and the request behind it" width="860" />
+</p>
 
 ---
 
