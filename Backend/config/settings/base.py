@@ -147,3 +147,7 @@ else:
             "LOCATION": "unfurl-locmem",
         },
     }
+
+
+# Google sign-in (optional). The OAuth client id from Google Cloud Console; empty disables the endpoint.
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")

@@ -83,8 +83,23 @@ npm run dev
 | `CORS_ALLOWED_ORIGINS` | no | Comma-separated frontend origins. Defaults to the local Vite server. |
 | `CSRF_TRUSTED_ORIGINS` | prod | Comma-separated, used by `config.settings.prod`. |
 | `DEBUG` | no | `True` for local dev. |
+| `GOOGLE_CLIENT_ID` | no | Turns on "Continue with Google" on the sign-in page. See **Google sign-in** below. |
 
-Frontend: `VITE_API_URL` points at the backend.
+Frontend: `VITE_API_URL` points at the backend; `VITE_GOOGLE_CLIENT_ID` is the same Google client id, only needed for the Google button.
+
+</details>
+
+<details>
+<summary><b>🔑 Google sign-in</b> (optional, free)</summary>
+<br/>
+
+Adds a **Continue with Google** button to the sign-in page. First-time Google users get an account created from their Google email and name; existing accounts with the same email just sign in. Password sign-in keeps working as before.
+
+1. In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) create an **OAuth client ID** of type **Web application**. If asked, set up the consent screen first (External, app name, your email; no extra scopes).
+2. Under **Authorized JavaScript origins** add your frontend origins, for example `http://localhost:5173` and `https://<your-frontend>.vercel.app`. No redirect URI is needed.
+3. Put the client ID in `GOOGLE_CLIENT_ID` (backend) **and** `VITE_GOOGLE_CLIENT_ID` (frontend) and redeploy both. There is no client secret in this flow: the backend verifies the Google ID token with Google's public keys and then issues the usual JWT pair from `POST /api/auth/google/`.
+
+Leave both variables empty and the button is hidden.
 
 </details>
 
@@ -179,7 +194,7 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET`, `POST /api/keys/` | JWT | List or create API keys |
 | `DELETE /api/keys/<id>/` | JWT | Revoke a key |
 | `GET /api/usage/` | JWT | Usage analytics |
-| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
 
 ## 🚦 Limits
 

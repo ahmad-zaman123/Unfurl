@@ -82,6 +82,13 @@ export const api = {
   me() {
     return request("/api/auth/me/", { auth: true });
   },
+  /** Exchange a Google ID token (from the Google button) for our JWT pair; creates the account on first use. */
+  async loginWithGoogle(credential) {
+    const data = await request("/api/auth/google/", { method: "POST", body: { credential } });
+    localStorage.setItem(ACCESS_KEY, data.access);
+    localStorage.setItem(REFRESH_KEY, data.refresh);
+    return data;
+  },
   createCard(spec) {
     return request("/api/v1/cards", { method: "POST", body: spec, auth: true });
   },

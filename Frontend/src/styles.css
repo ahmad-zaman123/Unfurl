@@ -257,3 +257,9 @@ code { font-family: var(--code); font-size: 0.9em; }
   .reveal-btn { width: 2.75rem; height: 2.75rem; }
   .back-link { min-height: 2.75rem; }
 }
+
+/* Google sign-in (shown only when VITE_GOOGLE_CLIENT_ID is set) */
+.google-signin { display: grid; gap: 0.9rem; }
+.google-signin-button { display: flex; justify-content: center; min-height: 40px; }
+.google-signin-or { display: flex; align-items: center; gap: 0.75rem; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.google-signin-or::before, .google-signin-or::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: 0.35; }
