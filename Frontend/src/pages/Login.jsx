@@ -64,6 +64,23 @@ export default function Login() {
     }
   }
 
+  /** One click: sign straight in as the shared demo user. */
+  async function useDemo() {
+    setIsRegister(false);
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+    setError("");
+    setBusy(true);
+    try {
+      await api.login(DEMO_EMAIL, DEMO_PASSWORD);
+      navigate(afterLogin(search, "/"));
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const handleGoogle = useCallback(
     async (credential) => {
       setError("");
@@ -162,16 +179,7 @@ export default function Login() {
           >
             {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
           </button>
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => {
-              setIsRegister(false);
-              setEmail(DEMO_EMAIL);
-              setPassword(DEMO_PASSWORD);
-              setError("");
-            }}
-          >
+          <button type="button" className="link-btn" onClick={useDemo} disabled={busy}>
             Use the demo account
           </button>
         </div>
