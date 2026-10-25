@@ -81,7 +81,7 @@ export default function Login() {
         <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
         <p className="auth-subtitle">Social preview images as an API.</p>
 
-        <GoogleButton onCredential={handleGoogle} onError={setError} text={isRegister ? "signup_with" : "continue_with"} />
+        <GoogleButton onCredential={handleGoogle} onError={setError} />
 
         {isRegister && (
           <label className="field">
