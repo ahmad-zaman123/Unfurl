@@ -93,7 +93,7 @@ Frontend: `VITE_API_URL` points at the backend; `VITE_GOOGLE_CLIENT_ID` is the s
 <summary><b>🔑 Google sign-in</b> (optional, free)</summary>
 <br/>
 
-Adds a **Continue with Google** button to the sign-in page. First-time Google users get an account created from their Google email and name; existing accounts with the same email just sign in. Password sign-in keeps working as before.
+Adds a **Continue with Google** button to the sign-in page. First-time Google users get an account created from their Google email and name; existing accounts with the same email just sign in. Password sign-in keeps working as before, and a Google-created account can add a password later from the account menu.
 
 1. In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) create an **OAuth client ID** of type **Web application**. If asked, set up the consent screen first (External, app name, your email; no extra scopes).
 2. Under **Authorized JavaScript origins** add your frontend origins, for example `http://localhost:5173` and `https://<your-frontend>.vercel.app`. No redirect URI is needed.
@@ -194,7 +194,7 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET`, `POST /api/keys/` | JWT | List or create API keys |
 | `DELETE /api/keys/<id>/` | JWT | Revoke a key |
 | `GET /api/usage/` | JWT | Usage analytics |
-| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
 
 ## 🚦 Limits
 

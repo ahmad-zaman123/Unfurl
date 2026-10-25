@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { api, logout } from "../api.js";
 import ApiKeys from "../components/ApiKeys.jsx";
 import Brand from "../components/Brand.jsx";
 import Playground from "../components/Playground.jsx";
+import ProfileMenu from "../components/ProfileMenu.jsx";
 import Usage from "../components/Usage.jsx";
 import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
@@ -13,15 +14,21 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
+  const loadUser = useCallback(
+    () =>
+      api
+        .me()
+        .then(setUser)
+        .catch(() => {
+          logout();
+          navigate("/login");
+        }),
+    [navigate],
+  );
+
   useEffect(() => {
-    api
-      .me()
-      .then(setUser)
-      .catch(() => {
-        logout();
-        navigate("/login");
-      });
-  }, [navigate]);
+    loadUser();
+  }, [loadUser]);
 
   function handleLogout() {
     logout();
@@ -33,13 +40,10 @@ export default function Dashboard() {
       <header className="topbar">
         <Brand />
         <div className="topbar-right">
-          {user && <span className="muted">{user.email}</span>}
           <button className="btn ghost small" onClick={() => navigate("/docs")}>
             Docs
           </button>
-          <button className="btn ghost small" onClick={handleLogout}>
-            Sign out
-          </button>
+          <ProfileMenu user={user} onSignOut={handleLogout} changePassword={api.changePassword} onPasswordChanged={loadUser} />
         </div>
       </header>
 
