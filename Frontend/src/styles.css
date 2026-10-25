@@ -23,8 +23,10 @@
   --code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* Theme: follows the system unless the account menu set data-theme on <html> (the inline
+   script in index.html applies the saved choice before first paint). */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --ground: #e6e7e3;
     --sheet: #f7f7f4;
     --sheet-2: #ededea;
@@ -41,9 +43,27 @@
     --focus: #0b5f73;
   }
 }
+:root[data-theme="light"] {
+    --ground: #e6e7e3;
+    --sheet: #f7f7f4;
+    --sheet-2: #ededea;
+    --ink: #141517;
+    --ink-2: #34363a;
+    --muted: #595c61;
+    --rule: #c3c5bf;
+    --rule-soft: #d8dad4;
+    --cyan: #00667d;
+    --magenta: #b8135c;
+    --warn-text: #7a5a00;
+    --danger: #a3202f;
+    --danger-soft: #f6e2e4;
+    --focus: #0b5f73;
+}
 
 * { box-sizing: border-box; }
 html { color-scheme: dark light; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 body {
   margin: 0; min-height: 100vh;
@@ -307,3 +327,13 @@ code { font-family: var(--code); font-size: 0.9em; }
 .pmodal-note { color: var(--muted); font-size: 0.85rem; }
 .pmodal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.3rem; }
 .pmodal .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- dark mode switch (account menu) ---------- */
+.pitem.static { cursor: default; }
+.pitem.static:hover { background: none; }
+.pitem.static > span { flex: 1; }
+.switch { width: 40px; height: 22px; border-radius: 999px; border: 0; background: var(--rule); position: relative; cursor: pointer; padding: 0; transition: background 0.15s; flex: none; }
+.switch i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.switch.on { background: var(--yellow); }
+.switch.on i { transform: translateX(18px); }
+.switch:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
