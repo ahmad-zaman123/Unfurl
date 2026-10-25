@@ -39,7 +39,7 @@ function GoogleMark() {
  * takes the click, so the sign-in popup and ID token come from Google Identity Services.
  * `onCredential(idToken)` receives the token to send to the backend.
  */
-export default function GoogleButton({ onCredential, onError }) {
+export default function GoogleButton({ onCredential, onError, busy = false }) {
   const holder = useRef(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -77,10 +77,10 @@ export default function GoogleButton({ onCredential, onError }) {
   if (!CLIENT_ID || failed) return null;
   return (
     <div className="google-signin">
-      <div className={"google-wrap" + (ready ? "" : " is-loading")}>
+      <div className={"google-wrap" + (ready ? "" : " is-loading") + (busy ? " is-busy" : "")} aria-busy={busy}>
         <div className="btn outline google-btn" aria-hidden="true">
           <GoogleMark />
-          Continue with Google
+          {busy ? "Signing you in…" : "Continue with Google"}
         </div>
         <div ref={holder} className="google-overlay" aria-label="Continue with Google" />
       </div>

@@ -45,6 +45,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -67,6 +68,7 @@ export default function Login() {
     async (credential) => {
       setError("");
       setBusy(true);
+      setGoogleBusy(true);
       try {
         await api.loginWithGoogle(credential);
         navigate(afterLogin(search, "/"));
@@ -74,6 +76,7 @@ export default function Login() {
         setError(err.message || "Google sign-in failed.");
       } finally {
         setBusy(false);
+        setGoogleBusy(false);
       }
     },
     [navigate],
@@ -87,7 +90,7 @@ export default function Login() {
         <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
         <p className="auth-subtitle">Social preview images as an API.</p>
 
-        <GoogleButton onCredential={handleGoogle} onError={setError} />
+        <GoogleButton onCredential={handleGoogle} onError={setError} busy={googleBusy} />
 
         {isRegister && (
           <label className="field">
