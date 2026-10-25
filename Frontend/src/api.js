@@ -42,7 +42,44 @@ function extractError(data) {
   return null;
 }
 
-async function request(path, { method = "GET", body, auth = false } = {}) {
+// One refresh at a time: when several requests hit an expired token together
+// they all wait for the same new access token instead of each asking for one.
+let refreshing = null;
+
+async function refreshAccess() {
+  if (!refreshing) {
+    refreshing = (async () => {
+      const refresh = localStorage.getItem(REFRESH_KEY);
+      if (!refresh) return false;
+      try {
+        const response = await fetch(API_URL + "/api/auth/token/refresh/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh }),
+        });
+        if (!response.ok) return false;
+        const data = await response.json();
+        localStorage.setItem(ACCESS_KEY, data.access);
+        return true;
+      } catch {
+        return false;
+      }
+    })().finally(() => {
+      refreshing = null;
+    });
+  }
+  return refreshing;
+}
+
+/** The session is over: forget the tokens and go to sign in, remembering where we were. */
+function sessionExpired() {
+  logout();
+  if (window.location.pathname === "/login") return;
+  const here = window.location.pathname + window.location.search;
+  window.location.assign("/login?next=" + encodeURIComponent(here));
+}
+
+async function request(path, { method = "GET", body, auth = false, retry = true } = {}) {
   const headers = { "Content-Type": "application/json" };
   if (auth) {
     const token = localStorage.getItem(ACCESS_KEY);
@@ -55,6 +92,15 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+  // Access tokens last an hour. On the first 401 of an authenticated call, get a fresh
+  // one with the refresh token and retry once; if that fails too, the session is over.
+  if (response.status === 401 && auth) {
+    if (retry && (await refreshAccess())) {
+      return request(path, { method, body, auth, retry: false });
+    }
+    sessionExpired();
+    throw new Error("Your session has expired. Please sign in again.");
+  }
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
   if (!response.ok) {
