@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import Brand from "../components/Brand.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import CodeBlock from "../components/CodeBlock.jsx";
 import Proof from "../components/Proof.jsx";
 import { API_BASE } from "../lib.js";
@@ -24,6 +25,7 @@ export default function Landing() {
           <Link to="/login" className="link-btn">
             Sign in
           </Link>
+          <ThemeToggle />
         </nav>
       </header>
 

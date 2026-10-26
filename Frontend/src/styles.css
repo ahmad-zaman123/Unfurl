@@ -232,7 +232,7 @@ code { font-family: var(--code); font-size: 0.9em; }
 /* landing */
 .landing { min-height: 100vh; display: flex; flex-direction: column; }
 .landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem clamp(1rem, 5vw, 3rem); }
-.landing-nav-links { display: flex; gap: 1.4rem; }
+.landing-nav-links { display: flex; align-items: center; gap: 1.4rem; }
 .landing-main { width: min(78rem, 100%); margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 5vw, 3rem) 5rem; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
 @media (max-width: 62rem) { .landing-main { grid-template-columns: minmax(0, 1fr); } }
 .landing-title { margin: 0; font-size: clamp(2.3rem, 4.6vw, 3.7rem); line-height: 1.05; font-weight: 800; font-stretch: 104%; letter-spacing: -0.02em; text-wrap: balance; }
@@ -339,3 +339,8 @@ code { font-family: var(--code); font-size: 0.9em; }
 .switch.on { background: var(--yellow); }
 .switch.on i { transform: translateX(18px); }
 .switch:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+/* Sun/moon theme button (landing nav, sign-in screens) */
+.theme-toggle { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0; background: none; border: 1px solid var(--rule); border-radius: 2px; color: var(--ink); cursor: pointer; }
+.theme-toggle:hover { background: var(--sheet-2); }
+.theme-toggle.floating { position: fixed; top: 0.9rem; right: 0.9rem; z-index: 20; }

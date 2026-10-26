@@ -5,6 +5,7 @@ import { api } from "../api.js";
 import BackLink from "../components/BackLink.jsx";
 import Brand from "../components/Brand.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
 const DEMO_EMAIL = "demo@unfurl.app";
@@ -101,6 +102,7 @@ export default function Login() {
 
   return (
     <div className="auth-screen">
+      <ThemeToggle className="floating" />
       <form className="auth-card" onSubmit={handleSubmit}>
         <BackLink />
         <Brand to="/" />
