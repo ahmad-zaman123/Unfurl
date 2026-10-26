@@ -44,8 +44,8 @@ export default function Dashboard() {
           <button className="btn ghost small" onClick={() => navigate("/docs")}>
             Docs
           </button>
-          <ThemeToggle />
           <ProfileMenu user={user} onSignOut={handleLogout} changePassword={api.changePassword} onPasswordChanged={loadUser} />
+          <ThemeToggle />
         </div>
       </header>
 

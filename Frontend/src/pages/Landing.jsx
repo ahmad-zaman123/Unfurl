@@ -22,10 +22,10 @@ export default function Landing() {
           <Link to="/docs" className="link-btn">
             Docs
           </Link>
-          <ThemeToggle />
           <Link to="/login" className="link-btn">
             Sign in
           </Link>
+          <ThemeToggle />
         </nav>
       </header>
 
