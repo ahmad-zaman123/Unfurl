@@ -1,8 +1,7 @@
 import { useCallback, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { api } from "../api.js";
-import BackLink from "../components/BackLink.jsx";
 import Brand from "../components/Brand.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
@@ -101,91 +100,99 @@ export default function Login() {
   );
 
   return (
-    <div className="auth-screen">
-      <ThemeToggle className="floating" />
-      <form className="auth-card" onSubmit={handleSubmit}>
-        <BackLink />
+    <div className="auth-page">
+      <header className="landing-nav">
         <Brand to="/" />
-        <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
-        <p className="auth-subtitle">Social preview images as an API.</p>
+        <nav className="landing-nav-links" aria-label="Primary">
+          <Link to="/docs" className="link-btn">
+            Docs
+          </Link>
+          <ThemeToggle />
+        </nav>
+      </header>
+      <div className="auth-screen">
+        <form className="auth-card" onSubmit={handleSubmit}>
+          <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
+          <p className="auth-subtitle">Social preview images as an API.</p>
 
-        <GoogleButton onCredential={handleGoogle} onError={setError} busy={googleBusy} />
+          <GoogleButton onCredential={handleGoogle} onError={setError} busy={googleBusy} />
 
-        {isRegister && (
+          {isRegister && (
+            <label className="field">
+              <span>Full name</span>
+              <input
+                type="text"
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ada Lovelace"
+              />
+            </label>
+          )}
+
           <label className="field">
-            <span>Full name</span>
+            <span>Email</span>
             <input
-              type="text"
-              autoComplete="name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Ada Lovelace"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
             />
           </label>
-        )}
 
-        <label className="field">
-          <span>Email</span>
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-        </label>
+          <label className="field">
+            <span>Password</span>
+            <div className="input-wrap">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={8}
+                autoComplete={isRegister ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+              <button
+                type="button"
+                className="reveal-btn"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                <EyeIcon off={showPassword} />
+              </button>
+            </div>
+          </label>
 
-        <label className="field">
-          <span>Password</span>
-          <div className="input-wrap">
-            <input
-              type={showPassword ? "text" : "password"}
-              required
-              minLength={8}
-              autoComplete={isRegister ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
-            />
+          {error && (
+            <div className="error-banner" role="alert">
+              {error}
+            </div>
+          )}
+
+          <button className="btn primary" type="submit" disabled={busy}>
+            {busy ? "One moment…" : isRegister ? "Create account" : "Sign in"}
+          </button>
+
+          <div className="auth-alt">
             <button
               type="button"
-              className="reveal-btn"
-              onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              title={showPassword ? "Hide password" : "Show password"}
+              className="link-btn"
+              onClick={() => {
+                setError("");
+                setIsRegister(!isRegister);
+              }}
             >
-              <EyeIcon off={showPassword} />
+              {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
+            </button>
+            <button type="button" className="link-btn" onClick={useDemo} disabled={busy}>
+              Use the demo account
             </button>
           </div>
-        </label>
-
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
-          </div>
-        )}
-
-        <button className="btn primary" type="submit" disabled={busy}>
-          {busy ? "One moment…" : isRegister ? "Create account" : "Sign in"}
-        </button>
-
-        <div className="auth-alt">
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => {
-              setError("");
-              setIsRegister(!isRegister);
-            }}
-          >
-            {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
-          </button>
-          <button type="button" className="link-btn" onClick={useDemo} disabled={busy}>
-            Use the demo account
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
