@@ -45,8 +45,6 @@ function Icon({ d }) {
   );
 }
 const ICON = {
-  sun: "M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7l1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2l-1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
-  moon: "M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z",
   key: "M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L19 3m-3.5 3.5L18 9",
   out: "M10 17l5-5-5-5m5 5H3m9-9h7a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-7",
 };
@@ -58,24 +56,8 @@ const ICON = {
 export default function ProfileMenu({ user, onSignOut, changePassword, onPasswordChanged, children }) {
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState(false);
-  const [mode, setMode] = useState("light");
   const ref = useRef(null);
   const firstItem = useRef(null);
-
-  // index.html sets data-theme before first paint; read it once so the switch matches the page.
-  useEffect(() => {
-    setMode(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
-  }, []);
-
-  function setTheme(next) {
-    setMode(next);
-    try {
-      localStorage.setItem("theme", next);
-    } catch {
-      /* private mode: the choice just will not persist */
-    }
-    document.documentElement.setAttribute("data-theme", next);
-  }
 
   useEffect(() => {
     if (!open) return undefined;
@@ -139,20 +121,6 @@ export default function ProfileMenu({ user, onSignOut, changePassword, onPasswor
             <Icon d={ICON.key} />
             {user.has_password === false ? "Set a password" : "Change password"}
           </button>
-          <div className="pitem static">
-            <Icon d={mode === "dark" ? ICON.moon : ICON.sun} />
-            <span>Dark mode</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={mode === "dark"}
-              className={"switch" + (mode === "dark" ? " on" : "")}
-              onClick={() => setTheme(mode === "dark" ? "light" : "dark")}
-              aria-label="Toggle dark mode"
-            >
-              <i />
-            </button>
-          </div>
           <div className="psep" />
           <button type="button" role="menuitem" className="pitem danger" onClick={onSignOut}>
             <Icon d={ICON.out} />

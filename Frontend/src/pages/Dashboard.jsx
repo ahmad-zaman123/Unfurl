@@ -6,6 +6,7 @@ import ApiKeys from "../components/ApiKeys.jsx";
 import Brand from "../components/Brand.jsx";
 import Playground from "../components/Playground.jsx";
 import ProfileMenu from "../components/ProfileMenu.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import Usage from "../components/Usage.jsx";
 import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
@@ -43,6 +44,7 @@ export default function Dashboard() {
           <button className="btn ghost small" onClick={() => navigate("/docs")}>
             Docs
           </button>
+          <ThemeToggle />
           <ProfileMenu user={user} onSignOut={handleLogout} changePassword={api.changePassword} onPasswordChanged={loadUser} />
         </div>
       </header>
