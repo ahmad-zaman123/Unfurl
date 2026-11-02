@@ -1,4 +1,5 @@
 DEMO_EMAIL = "demo@unfurl.app"
+DEMO_PASSWORD_LOCKED = "The demo account is shared, so its password can't be changed."
 
 RESET_SENT = "If that email has an account, we've sent a reset link."
 RESET_INVALID = "This reset link is invalid or has expired."

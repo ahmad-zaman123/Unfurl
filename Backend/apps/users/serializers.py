@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 
-from apps.users.constants import DEMO_EMAIL, RESET_INVALID
+from apps.users.constants import DEMO_EMAIL, DEMO_PASSWORD_LOCKED, RESET_INVALID
 from apps.users.models import User
 
 
@@ -43,6 +43,8 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         user = self.context["request"].user
+        if user.email.lower() == DEMO_EMAIL:
+            raise serializers.ValidationError({"detail": DEMO_PASSWORD_LOCKED})
         current = attrs.get("current_password") or ""
         if user.has_usable_password() and not (current and user.check_password(current)):
             raise serializers.ValidationError({"current_password": "Your current password is wrong."})
