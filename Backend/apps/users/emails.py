@@ -1,9 +1,17 @@
+from email.utils import formataddr, parseaddr
+
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+
+
+def sender_address():
+    """The sending address, always under a project name so the inbox shows who it's from."""
+    name, address = parseaddr(settings.DEFAULT_FROM_EMAIL)
+    return formataddr((name or "Unfurl", address))
 
 
 def send_password_reset_email(user):
@@ -21,6 +29,6 @@ def send_password_reset_email(user):
         "users/emails/password_reset.html",
         {"email": user.email, "reset_url": reset_url, "logo_url": f"{settings.APP_URL}/email-logo.png"},
     )
-    message = EmailMultiAlternatives("Reset your Unfurl password", text, to=[user.email])
+    message = EmailMultiAlternatives("Reset your Unfurl password", text, from_email=sender_address(), to=[user.email])
     message.attach_alternative(html, "text/html")
     message.send()

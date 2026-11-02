@@ -7,6 +7,7 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
 
 from apps.users.constants import DEMO_EMAIL, DEMO_PASSWORD_LOCKED, RESET_INVALID, RESET_LIMITS, RESET_SENT
+from apps.users.emails import sender_address
 from apps.users.models import User
 
 FORGOT = "/api/auth/password/forgot/"
@@ -52,6 +53,10 @@ class PasswordResetTests(TestCase):
         self.assertIn("https://app.example/reset-password?uid=", message.body)
         html = message.alternatives[0][0]
         self.assertIn('src="https://app.example/email-logo.png"', html)
+        with self.settings(DEFAULT_FROM_EMAIL="bot@example.com"):
+            self.assertEqual(sender_address(), "Unfurl <bot@example.com>")
+        with self.settings(DEFAULT_FROM_EMAIL="Support <bot@example.com>"):
+            self.assertEqual(sender_address(), "Support <bot@example.com>")
         self.assertIn('href="https://app.example/reset-password?uid=', html)
         self.assertIn("sara@example.com", html)
 
