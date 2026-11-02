@@ -104,6 +104,18 @@ Leave both variables empty and the button is hidden.
 </details>
 
 <details>
+<summary><b>✉️ Password reset</b> (optional, free)</summary>
+<br/>
+
+Adds **Forgot password?** to the sign-in page. It emails a link that works once and expires in 15 minutes. Using it, or changing a password from the account menu, ends the account's other sessions; API keys keep working.
+
+Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `EMAIL_FROM` on the backend. For Gmail, use `smtp.gmail.com`, port `587` and an [app password](https://myaccount.google.com/apppasswords). Links open the first address in `CORS_ALLOWED_ORIGINS`. Requests are rate limited through the same cache as API keys, so set `REDIS_URL` in production.
+
+Leave `SMTP_HOST` empty and the endpoint replies that reset isn't available.
+
+</details>
+
+<details>
 <summary><b>🔑 Demo account</b> (live site)</summary>
 <br/>
 
@@ -194,7 +206,7 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET`, `POST /api/keys/` | JWT | List or create API keys |
 | `DELETE /api/keys/<id>/` | JWT | Revoke a key |
 | `GET /api/usage/` | JWT | Usage analytics |
-| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
 
 ## 🚦 Limits
 
