@@ -17,7 +17,10 @@ def send_password_reset_email(user):
         f"Choose a new password: {reset_url}\n\n"
         f"Expires in 15 minutes. If this wasn't you, you can ignore this email and your password won't change.\n"
     )
-    html = render_to_string("users/emails/password_reset.html", {"email": user.email, "reset_url": reset_url})
+    html = render_to_string(
+        "users/emails/password_reset.html",
+        {"email": user.email, "reset_url": reset_url, "logo_url": f"{settings.APP_URL}/email-logo.png"},
+    )
     message = EmailMultiAlternatives("Reset your Unfurl password", text, to=[user.email])
     message.attach_alternative(html, "text/html")
     message.send()

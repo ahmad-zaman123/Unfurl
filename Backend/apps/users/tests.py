@@ -51,6 +51,7 @@ class PasswordResetTests(TestCase):
         message = mail.outbox[0]
         self.assertIn("https://app.example/reset-password?uid=", message.body)
         html = message.alternatives[0][0]
+        self.assertIn('src="https://app.example/email-logo.png"', html)
         self.assertIn('href="https://app.example/reset-password?uid=', html)
         self.assertIn("sara@example.com", html)
 
