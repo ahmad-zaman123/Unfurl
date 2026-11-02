@@ -1,7 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 
+from apps.users.constants import DEMO_EMAIL, RESET_INVALID
 from apps.users.models import User
 
 
@@ -55,6 +58,39 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Set a new password from an emailed link. The token is tied to the current password,
+    so it stops working as soon as the password changes."""
+
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        try:
+            user = User.objects.filter(pk=urlsafe_base64_decode(attrs["uid"]).decode(), is_active=True).first()
+        except (TypeError, ValueError, OverflowError, DjangoValidationError):
+            user = None
+        if user is None or user.email.lower() == DEMO_EMAIL or not default_token_generator.check_token(user, attrs["token"]):
+            raise serializers.ValidationError({"detail": RESET_INVALID})
+        try:
+            validate_password(attrs["new_password"], user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": list(exc.messages)}) from exc
+        attrs["user"] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
         user.set_password(self.validated_data["new_password"])
         user.save(update_fields=["password"])
         return user

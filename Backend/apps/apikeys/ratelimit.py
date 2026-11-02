@@ -17,7 +17,7 @@ class RateLimitResult:
     retry_after: int
 
 
-def _check_window(identifier, scope, limit, window_seconds):
+def check_window(identifier, scope, limit, window_seconds):
     """Fixed-window counter backed by an atomic cache incr."""
     now = int(time.time())
     window_start = now - (now % window_seconds)
@@ -45,8 +45,8 @@ def plan_limits(plan):
 def check_api_key_limits(api_key):
     """Enforce the per-minute and per-day windows for one API key, by plan."""
     limits = plan_limits(api_key.owner.plan)
-    minute = _check_window(api_key.pk, "min", limits["per_minute"], 60)
-    day = _check_window(api_key.pk, "day", limits["per_day"], 86400)
+    minute = check_window(api_key.pk, "min", limits["per_minute"], 60)
+    day = check_window(api_key.pk, "day", limits["per_day"], 86400)
     if not minute.allowed:
         return minute
     if not day.allowed:

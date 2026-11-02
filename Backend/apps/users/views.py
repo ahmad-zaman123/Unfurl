@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
@@ -7,8 +9,28 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.apikeys.ratelimit import check_window
+from apps.users.constants import DEMO_EMAIL, RESET_LIMITS, RESET_SENT, RESET_TOO_MANY
+from apps.users.emails import send_password_reset_email
 from apps.users.models import User
-from apps.users.serializers import ChangePasswordSerializer, RegisterSerializer, UserSerializer
+from apps.users.serializers import (
+    ChangePasswordSerializer,
+    ForgotPasswordSerializer,
+    RegisterSerializer,
+    ResetPasswordSerializer,
+    UserSerializer,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def client_ip(request):
+    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR") or "unknown"
+
+
+def within_limit(scope, identifier):
+    limit, window = RESET_LIMITS[scope]
+    return check_window(identifier, scope, limit, window).allowed
 
 
 class RegisterAPIView(generics.CreateAPIView):
@@ -68,12 +90,56 @@ class GoogleAuthAPIView(APIView):
 
 
 class ChangePasswordAPIView(APIView):
-    """Change (or, for Google sign-in accounts, first set) the signed-in user's password."""
+    """Change (or, for Google sign-in accounts, first set) the signed-in user's password.
+
+    Changing it ends every existing session, so this one gets a fresh JWT pair.
+    """
 
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        refresh = RefreshToken.for_user(serializer.save())
+        return Response({"detail": "Password changed.", "access": str(refresh.access_token), "refresh": str(refresh)})
+
+
+class ForgotPasswordAPIView(APIView):
+    """Email a reset link. The reply is the same whether or not the address has an account."""
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        if not settings.EMAIL_HOST:
+            return Response(
+                {"detail": "Password reset isn't available right now."}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not (within_limit("reset_ip", client_ip(request)) and within_limit("reset_all", "all")):
+            return Response({"detail": RESET_TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        email = serializer.validated_data["email"].lower()
+        # Over this limit nothing is sent, but the reply stays the same for every address.
+        if email != DEMO_EMAIL and within_limit("reset_email", email):
+            for user in User.objects.filter(email__iexact=email, is_active=True):
+                try:
+                    send_password_reset_email(user)
+                except Exception:
+                    logger.exception("Could not send a password reset email")
+        return Response({"detail": RESET_SENT})
+
+
+class ResetPasswordAPIView(APIView):
+    """Set a new password from an emailed link, which also ends the account's existing sessions."""
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        if not within_limit("reset_use", client_ip(request)):
+            return Response({"detail": RESET_TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Password changed."})
