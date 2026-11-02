@@ -53,6 +53,8 @@ class PasswordResetTests(TestCase):
         self.assertIn("https://app.example/reset-password?uid=", message.body)
         html = message.alternatives[0][0]
         self.assertIn('src="https://app.example/email-logo.png"', html)
+        self.forgot()
+        self.assertNotEqual(message.extra_headers["X-Entity-Ref-ID"], mail.outbox[-1].extra_headers["X-Entity-Ref-ID"])
         with self.settings(DEFAULT_FROM_EMAIL="bot@example.com"):
             self.assertEqual(sender_address(), "Unfurl <bot@example.com>")
         with self.settings(DEFAULT_FROM_EMAIL="Support <bot@example.com>"):

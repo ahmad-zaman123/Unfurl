@@ -1,3 +1,4 @@
+import uuid
 from email.utils import formataddr, parseaddr
 
 from django.conf import settings
@@ -29,6 +30,13 @@ def send_password_reset_email(user):
         "users/emails/password_reset.html",
         {"email": user.email, "reset_url": reset_url, "logo_url": f"{settings.APP_URL}/email-logo.png"},
     )
-    message = EmailMultiAlternatives("Reset your Unfurl password", text, from_email=sender_address(), to=[user.email])
+    message = EmailMultiAlternatives(
+        "Reset your Unfurl password",
+        text,
+        from_email=sender_address(),
+        to=[user.email],
+        # A unique value keeps Gmail from grouping repeat emails and hiding the button as quoted text.
+        headers={"X-Entity-Ref-ID": str(uuid.uuid4())},
+    )
     message.attach_alternative(html, "text/html")
     message.send()
