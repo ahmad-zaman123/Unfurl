@@ -166,6 +166,12 @@ export default function Login() {
             </div>
           </label>
 
+          {!isRegister && (
+            <Link to="/forgot-password" className="link-btn auth-forgot">
+              Forgot password?
+            </Link>
+          )}
+
           {error && (
             <div className="error-banner" role="alert">
               {error}
