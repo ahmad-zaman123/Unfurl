@@ -163,4 +163,13 @@ export const api = {
   getUsage() {
     return request("/api/usage/", { auth: true });
   },
+  getBilling() {
+    return request("/api/billing/", { auth: true });
+  },
+  startCheckout() {
+    return request("/api/billing/checkout/", { method: "POST", auth: true });
+  },
+  openBillingPortal() {
+    return request("/api/billing/portal/", { method: "POST", auth: true });
+  },
 };

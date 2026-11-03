@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { api, logout } from "../api.js";
 import ApiKeys from "../components/ApiKeys.jsx";
+import Billing from "../components/Billing.jsx";
 import Brand from "../components/Brand.jsx";
 import Playground from "../components/Playground.jsx";
 import ProfileMenu from "../components/ProfileMenu.jsx";
@@ -14,6 +15,7 @@ export default function Dashboard() {
   useDocumentTitle("Dashboard");
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [usageVersion, setUsageVersion] = useState(0);
 
   const loadUser = useCallback(
     () =>
@@ -30,6 +32,8 @@ export default function Dashboard() {
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+  const refreshUsage = useCallback(() => setUsageVersion((version) => version + 1), []);
 
   function handleLogout() {
     logout();
@@ -53,9 +57,10 @@ export default function Dashboard() {
         <h1 className="sr-only">Dashboard</h1>
         <Playground />
         <div className="dashboard-split">
-          <Usage />
+          <Usage key={usageVersion} />
           <ApiKeys />
         </div>
+        <Billing onPlanChanged={refreshUsage} />
       </main>
     </div>
   );

@@ -260,6 +260,12 @@ code { font-family: var(--code); font-size: 0.9em; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 /* dashboard: usage and keys sit side by side on wide screens */
+.plan-table { width: 100%; max-width: 40rem; border-collapse: collapse; font-size: 0.95rem; }
+.plan-table th, .plan-table td { padding: 0.55rem 0.75rem; text-align: right; border-bottom: 1px solid var(--rule-soft); }
+.plan-table th:first-child, .plan-table td:first-child { padding-left: 0; text-align: left; font-weight: 400; color: var(--ink-2); }
+.plan-table thead th { font-weight: 800; border-bottom: 1px solid var(--rule); }
+.billing-note code { white-space: nowrap; }
+.billing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1rem; }
 .dashboard-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); align-items: start; }
 @media (max-width: 62rem) { .dashboard-split { grid-template-columns: minmax(0, 1fr); } }
 
