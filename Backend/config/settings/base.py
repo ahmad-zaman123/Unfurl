@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     "apps.users",
     "apps.apikeys",
     "apps.cards",
+    "apps.billing",
 )
 
 MIDDLEWARE = (
@@ -168,3 +169,8 @@ PASSWORD_RESET_TIMEOUT = 15 * 60
 # Only the scheme and host are kept, in case the setting holds a full page address.
 _frontend = urlsplit((CORS_ALLOWED_ORIGINS or ["http://localhost:5175"])[0])
 APP_URL = f"{_frontend.scheme}://{_frontend.netloc}"
+
+# Stripe billing (optional). Leave any of these empty and the billing endpoints turn off.
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_PRO_PRICE_ID = env("STRIPE_PRO_PRICE_ID", default="")

@@ -10,3 +10,4 @@ redis==5.0.8
 whitenoise==6.7.0
 google-auth==2.62.0
 requests==2.34.2
+stripe==16.1.0
