@@ -38,7 +38,7 @@
 
 You authenticate once to **mint** a card, and get back a **signed public URL**. That URL goes straight into `<meta property="og:image">`: it needs no auth (crawlers can't send a token), it is tamper-proof, and it is cached after the first render.
 
-The image itself isn't the interesting part. The platform around it is: hashed API keys, HMAC-signed URLs, per-key rate limiting, plan quotas, usage analytics and an SSRF-guarded image fetcher.
+The image itself isn't the interesting part. The platform around it is: hashed API keys, HMAC-signed URLs, per-key rate limiting, plan quotas, Stripe subscriptions, usage analytics and an SSRF-guarded image fetcher.
 
 | 🎨 Create | 🔗 Serve | 📈 Observe |
 |---|---|---|
@@ -84,6 +84,7 @@ npm run dev
 | `CSRF_TRUSTED_ORIGINS` | prod | Comma-separated, used by `config.settings.prod`. |
 | `DEBUG` | no | `True` for local dev. |
 | `GOOGLE_CLIENT_ID` | no | Turns on "Continue with Google" on the sign-in page. See **Google sign-in** below. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` | no | Turn on Pro upgrades through Stripe. See **Stripe billing** below. |
 
 Frontend: `VITE_API_URL` points at the backend; `VITE_GOOGLE_CLIENT_ID` is the same Google client id, only needed for the Google button.
 
@@ -112,6 +113,21 @@ Adds **Forgot password?** to the sign-in page. It emails a link that works once 
 Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `EMAIL_FROM` on the backend. For Gmail, use `smtp.gmail.com`, port `587` and an [app password](https://myaccount.google.com/apppasswords). Links open the first address in `CORS_ALLOWED_ORIGINS`. Requests are rate limited through the same cache as API keys, so set `REDIS_URL` in production.
 
 Leave `SMTP_HOST` empty and the endpoint replies that reset isn't available.
+
+</details>
+
+<details>
+<summary><b>💳 Stripe billing</b> (optional, test mode is free)</summary>
+<br/>
+
+Adds a **Billing** panel to the dashboard. **Upgrade to Pro** opens Stripe Checkout, and **Manage billing** opens Stripe's customer portal for card changes, invoices and cancelling. Card details never touch this server.
+
+1. In the [Stripe dashboard](https://dashboard.stripe.com/test/products), in a sandbox or test mode, create a product called **Unfurl Pro** with a recurring monthly price of **$19**. Copy the price id (`price_…`).
+2. Under **Developers → Webhooks**, add an endpoint at `https://<your-backend>/api/billing/webhook/` that sends `checkout.session.completed` and `customer.subscription.created`, `.updated` and `.deleted`. Copy its signing secret (`whsec_…`).
+3. Turn on the [customer portal](https://dashboard.stripe.com/test/settings/billing/portal) and allow cancelling and updating payment methods.
+4. Set `STRIPE_SECRET_KEY` (`sk_test_…`), `STRIPE_WEBHOOK_SECRET` and `STRIPE_PRO_PRICE_ID` on the backend, run `python manage.py migrate` and redeploy.
+
+Pay with the test card `4242 4242 4242 4242`, any future expiry and any CVC. Leave any of the three variables empty and the panel is hidden.
 
 </details>
 
@@ -161,6 +177,9 @@ A React dashboard shows total and daily calls, usage per key, cache stats and yo
 ### 🚦 Rate limits and quotas
 Fixed-window limiter (atomic cache `incr`, Redis in prod) per key, returning `X-RateLimit-*` and `Retry-After`. A per-account monthly quota is enforced by plan. Only API-key traffic is metered, so dashboard previews stay unlimited.
 
+### 💳 Stripe subscriptions
+Pro is sold through Stripe Checkout, and Stripe's portal handles cards and cancelling. Webhooks are verified by signature and only say *something changed*: the app then reads the customer's current subscription back from Stripe, so duplicated or out-of-order events can't leave the wrong plan behind. A failed renewal keeps Pro while Stripe retries the card. Starting a second checkout closes the first, and anyone already subscribed is refused, even before their webhook arrives.
+
 ### 🛡️ SSRF-guarded logo fetching
 The `logo` parameter fetches a remote image. The fetcher resolves the host and rejects any non-public IP (loopback, private ranges, `169.254.x` cloud metadata), allows only `http(s)`, **refuses redirects** and caps size and time. A failed fetch just renders the card without a logo.
 
@@ -206,6 +225,8 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET`, `POST /api/keys/` | JWT | List or create API keys |
 | `DELETE /api/keys/<id>/` | JWT | Revoke a key |
 | `GET /api/usage/` | JWT | Usage analytics |
+| `GET /api/billing/`, `POST /api/billing/checkout/`, `/api/billing/portal/` | JWT | Plan status, Stripe Checkout and the customer portal |
+| `POST /api/billing/webhook/` | Stripe signature | Subscription updates from Stripe |
 | `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
 
 ## 🚦 Limits
@@ -215,13 +236,13 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | **Free** | 60 | 5,000 | 50,000 |
 | **Pro** | 600 | 100,000 | 2,000,000 |
 
-Per-minute and per-day limits apply per key. The monthly quota is summed across all of an account's keys.
+Per-minute and per-day limits apply per key. The monthly quota is summed across all of an account's keys. Pro is $19 a month through Stripe, and the limits change as soon as Stripe confirms the payment.
 
 ## 🛠️ Tech stack
 
 | Layer | Tech |
 |---|---|
-| **Backend** | Python 3.11, Django 4.2, Django REST Framework, Pillow, `simplejwt`, `drf-spectacular` |
+| **Backend** | Python 3.11, Django 4.2, Django REST Framework, Pillow, `simplejwt`, `drf-spectacular`, Stripe |
 | **Frontend** | React 19, Vite, React Router |
 | **Data** | SQLite (local), Neon Postgres (prod), Redis via Upstash (prod cache and rate limits) |
 | **Deployment** | Vercel (serverless Python + static React) |
@@ -235,6 +256,7 @@ Unfurl/
 │   │   ├── cards/          renderer, signing, SSRF-safe fetch, cache
 │   │   ├── apikeys/        key model, auth class, rate limiter
 │   │   ├── users/          accounts, plans, JWT
+│   │   ├── billing/        Stripe checkout, portal and webhooks
 │   │   └── core/           shared models
 │   ├── config/settings/    base · dev · prod
 │   └── scripts/seed_demo.py
@@ -245,7 +267,7 @@ Unfurl/
 ## ☁️ Deployment & CI
 
 - **Vercel**, with Neon Postgres and Upstash Redis. Set `REDIS_URL`, `DATABASE_URL`, `SECRET_KEY` and `CARD_SIGNING_SECRET` in production.
-- **CI** (`ci.yml`) runs `manage.py check`, a missing-migrations check and the frontend build on every push and pull request.
+- **CI** (`ci.yml`) runs `manage.py check`, a missing-migrations check, the account and billing tests and the frontend build on every push and pull request.
 - **Redis keep-alive** (`redis-keepalive.yml`) writes a key to Upstash every 7 days so the database doesn't sit idle. It needs a `REDIS_URL` repository secret.
 
 ## 📄 License
