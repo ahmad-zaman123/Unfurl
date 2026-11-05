@@ -12,14 +12,19 @@ from apps.users.models import User
 class UserSerializer(serializers.ModelSerializer):
     # False for accounts created through Google sign-in that never set one.
     has_password = serializers.SerializerMethodField()
+    # Lets the header show "Demo account" instead of the profile menu.
+    is_demo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "plan", "has_password")
+        fields = ("id", "email", "full_name", "plan", "has_password", "is_demo")
         read_only_fields = fields
 
     def get_has_password(self, obj):
         return obj.has_usable_password()
+
+    def get_is_demo(self, obj):
+        return is_demo_user(obj)
 
 
 class RegisterSerializer(serializers.ModelSerializer):

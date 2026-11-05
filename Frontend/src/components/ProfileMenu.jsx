@@ -84,6 +84,17 @@ export default function ProfileMenu({ user, onSignOut, changePassword, onPasswor
   }, [open]);
 
   if (!user) return null;
+  // A demo account has no name or password to manage, so it gets a label and Sign out, like Inkfold and Tendline.
+  if (user.is_demo) {
+    return (
+      <>
+        <span className="pdemo">Demo account</span>
+        <button type="button" className="link-btn" onClick={onSignOut}>
+          Sign out
+        </button>
+      </>
+    );
+  }
   const name = displayName(user);
 
   return (
