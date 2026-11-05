@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
+import { isAuthenticated } from "../api.js";
 import Brand from "../components/Brand.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import CodeBlock from "../components/CodeBlock.jsx";
 import { API_BASE as API } from "../lib.js";
 import { useDocumentTitle } from "../utils/useDocumentTitle.js";
@@ -24,15 +26,25 @@ function Code({ children, label = "Example" }) {
 
 export default function Docs() {
   useDocumentTitle("Quickstart");
+  const signedIn = isAuthenticated();
   return (
     <div className="docs">
       <header className="landing-nav">
         <Link to="/" aria-label="Unfurl home" style={{ textDecoration: "none" }}>
           <Brand />
         </Link>
-        <Link to="/login" className="link-btn">
-          Sign in
-        </Link>
+        <nav className="landing-nav-links" aria-label="Primary">
+          {signedIn ? (
+            <Link to="/" className="link-btn">
+              Console
+            </Link>
+          ) : (
+            <Link to="/login" className="link-btn">
+              Sign in
+            </Link>
+          )}
+          <ThemeToggle />
+        </nav>
       </header>
 
       <main className="docs-body">
@@ -45,7 +57,7 @@ export default function Docs() {
 
         <h2>1. Get an API key</h2>
         <p className="muted">
-          Create a key from your <Link to="/login">dashboard</Link>. It looks like{" "}
+          Create a key from your <Link to={signedIn ? "/" : "/login"}>dashboard</Link>. It looks like{" "}
           <code>sk_live_…</code> and is shown only once.
         </p>
 
