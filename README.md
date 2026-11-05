@@ -291,7 +291,7 @@ Unfurl/
 ## ☁️ Deployment & CI
 
 - **Vercel**, with Neon Postgres and Upstash Redis. Set `REDIS_URL`, `DATABASE_URL`, `SECRET_KEY` and `CARD_SIGNING_SECRET` in production.
-- **CI** (`ci.yml`) runs `manage.py check`, a missing-migrations check, the account and billing tests and the frontend build on every push and pull request.
+- **CI** (`ci.yml`) runs `manage.py check`, a missing-migrations check, the backend tests (accounts and demos, API keys and usage, rate limits, card signing and caching, SSRF-safe logo fetching, and Stripe billing) and the frontend build on every push and pull request.
 - **Redis keep-alive** (`redis-keepalive.yml`) writes a key to Upstash every 7 days so the database doesn't sit idle. It needs a `REDIS_URL` repository secret.
 
 ## 📄 License
