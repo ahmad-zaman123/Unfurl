@@ -15,6 +15,11 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license" /></a>
 </p>
 
+<p align="center">
+  <a href="https://unfurl-one.vercel.app"><b>Live demo → unfurl-one.vercel.app</b></a><br/>
+  <sub>Click <b>Try the live demo</b> to open a demo console with API keys and two weeks of usage. No sign-up needed.</sub>
+</p>
+
 https://github.com/user-attachments/assets/a83ba263-5d2b-436d-b713-f0f5e2760d5e
 
 <p align="center">
