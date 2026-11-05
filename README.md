@@ -30,10 +30,6 @@ https://github.com/user-attachments/assets/a83ba263-5d2b-436d-b713-f0f5e2760d5e
   <img src="docs/screenshots/card.png" alt="A generated social card" width="640" />
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="The Unfurl console: live card preview, the signed URL and the request behind it" width="860" />
-</p>
-
 ---
 
 ## 🧭 What is Unfurl?
