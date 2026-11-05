@@ -107,7 +107,7 @@ export default function Login() {
       </header>
       <div className="auth-screen">
         <form className="auth-card" onSubmit={handleSubmit}>
-          <h1>{isRegister ? "Create your account." : "Sign in to your console."}</h1>
+          <h1>{isRegister ? "Create your account" : "Sign in to your console"}</h1>
           <p className="auth-subtitle">Social preview images as an API.</p>
 
           <GoogleButton onCredential={handleGoogle} onError={setError} busy={googleBusy} />
