@@ -26,10 +26,6 @@ https://github.com/user-attachments/assets/a83ba263-5d2b-436d-b713-f0f5e2760d5e
   <a href="#-deployment--ci">Deployment</a>
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/card.png" alt="A generated social card" width="640" />
-</p>
-
 ---
 
 ## 🧭 What is Unfurl?
@@ -160,6 +156,11 @@ Sign in with **`demo@unfurl.app`** / **`demo1234`**. It is pre-loaded with API k
 ```
 
 A crawler fetching an `og:image` does a bare `GET` with no headers, so an authenticated "return a PNG" endpoint can't be used in a meta tag. Unfurl separates **create** (authenticated, mints a URL) from **serve** (public, cacheable), which is the only model that works.
+
+<p align="center">
+  <img src="docs/screenshots/card.png" alt="A generated social card, the 1200×630 PNG that the og:image URL returns" width="640" /><br/>
+  <sub>The PNG a crawler gets back from the signed <code>og:image</code> URL.</sub>
+</p>
 
 ## ✨ Features
 
