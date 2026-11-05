@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { isAuthenticated } from "./api.js";
 import Landing from "./pages/Landing.jsx";
@@ -9,6 +9,8 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
 function Home() {
+  // Reading the location re-renders this after the landing page signs a demo in.
+  useLocation();
   return isAuthenticated() ? <Dashboard /> : <Landing />;
 }
 

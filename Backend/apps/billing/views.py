@@ -28,13 +28,13 @@ from apps.billing.services import (
     create_portal_url,
     sync_customer,
 )
-from apps.users.constants import DEMO_EMAIL
+from apps.users.demo import is_demo_user
 
 logger = logging.getLogger(__name__)
 
 
 def is_demo(user):
-    return user.email.lower() == DEMO_EMAIL
+    return is_demo_user(user)
 
 
 def detail(message, code):

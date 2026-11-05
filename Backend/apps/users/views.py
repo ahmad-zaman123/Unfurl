@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.apikeys.ratelimit import check_window
-from apps.users.constants import DEMO_EMAIL, RESET_LIMITS, RESET_SENT, RESET_TOO_MANY
+from apps.users.constants import DEMO_FULL, DEMO_LIMITS, DEMO_TOO_MANY, RESET_LIMITS, RESET_SENT, RESET_TOO_MANY
+from apps.users.demo import create_demo_user, is_demo_email
 from apps.users.emails import send_password_reset_email
 from apps.users.models import User
 from apps.users.serializers import (
@@ -31,6 +32,21 @@ def client_ip(request):
 def within_limit(scope, identifier):
     limit, window = RESET_LIMITS[scope]
     return check_window(identifier, scope, limit, window).allowed
+
+
+class DemoAPIView(APIView):
+    """Create a private demo account with sample keys and usage, and sign it in."""
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+    def post(self, request):
+        if not check_window(client_ip(request), "demo_ip", *DEMO_LIMITS["demo_ip"]).allowed:
+            return Response({"detail": DEMO_TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if not check_window("all", "demo_all", *DEMO_LIMITS["demo_all"]).allowed:
+            return Response({"detail": DEMO_FULL}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        refresh = RefreshToken.for_user(create_demo_user())
+        return Response({"access": str(refresh.access_token), "refresh": str(refresh)}, status=status.HTTP_201_CREATED)
 
 
 class RegisterAPIView(generics.CreateAPIView):
@@ -121,7 +137,7 @@ class ForgotPasswordAPIView(APIView):
             return Response({"detail": RESET_TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         email = serializer.validated_data["email"].lower()
         # Over this limit nothing is sent, but the reply stays the same for every address.
-        if email != DEMO_EMAIL and within_limit("reset_email", email):
+        if not is_demo_email(email) and within_limit("reset_email", email):
             for user in User.objects.filter(email__iexact=email, is_active=True):
                 try:
                     send_password_reset_email(user)

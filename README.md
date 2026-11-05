@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://unfurl-one.vercel.app"><b>Live demo → unfurl-one.vercel.app</b></a><br/>
-  <sub>Click <b>Try the live demo</b> to open a demo console with API keys and two weeks of usage. No sign-up needed.</sub>
+  <sub>Click <b>Try the live demo</b> to get your own private console with API keys and two weeks of usage. No sign-up needed.</sub>
 </p>
 
 https://github.com/user-attachments/assets/a83ba263-5d2b-436d-b713-f0f5e2760d5e
@@ -62,7 +62,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
-python scripts/seed_demo.py       # optional: demo account with keys and two weeks of usage
+python scripts/seed_demo.py       # optional: shared local demo login with keys and usage
 python manage.py runserver 8010
 ```
 
@@ -138,10 +138,16 @@ Pay with the test card `4242 4242 4242 4242`, any future expiry and any CVC. Lea
 </details>
 
 <details>
-<summary><b>🔑 Demo account</b> (live site)</summary>
+<summary><b>🔑 Live demo</b> (live site)</summary>
 <br/>
 
-Sign in with **`demo@unfurl.app`** / **`demo1234`**. It is pre-loaded with API keys and two weeks of usage, so the analytics dashboard has data on first login.
+Click **Try the live demo** on the home or sign-in page. `POST /api/auth/demo/` creates a fresh account just for you, with a Production and a Staging key and two weeks of usage, so the analytics dashboard has data straight away. Nobody else sees the keys you create or revoke.
+
+- Demo accounts can't set a password, upgrade to Pro or get reset emails.
+- Each one is deleted after two days. Old ones are cleaned up whenever a new demo starts, so no cron job is needed.
+- **Limits:** 10 demos per IP address per hour and 500 a day in total.
+
+For local development, `python scripts/seed_demo.py` still creates a shared `demo@unfurl.app` / `demo1234` login.
 
 </details>
 
@@ -245,7 +251,7 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET /api/usage/` | JWT | Usage analytics |
 | `GET /api/billing/`, `POST /api/billing/checkout/`, `/api/billing/portal/` | JWT | Plan status, Stripe Checkout and the customer portal |
 | `POST /api/billing/webhook/` | Stripe signature | Subscription updates from Stripe |
-| `POST /api/auth/register/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+| `POST /api/auth/register/`, `/auth/demo/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
 
 ## 🚦 Limits
 

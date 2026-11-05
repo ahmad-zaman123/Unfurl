@@ -19,6 +19,6 @@ SESSION_LIMIT = (10, 60)
 BILLING_OFF = "Billing isn't available right now."
 BILLING_FAILED = "We couldn't reach the payment provider. Please try again."
 BILLING_TOO_MANY = "Too many billing requests. Please wait a minute and try again."
-DEMO_BILLING_LOCKED = "The demo account is shared, so it can't be upgraded. Create a free account to try this."
+DEMO_BILLING_LOCKED = "Demo accounts can't be upgraded. Create a free account to try this."
 ALREADY_PRO = "You're already on Pro. Use Manage billing to change your subscription."
 NO_SUBSCRIPTION = "You don't have a subscription to manage yet."

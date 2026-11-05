@@ -141,6 +141,13 @@ export const api = {
   resetPassword(payload) {
     return request("/api/auth/password/reset/", { method: "POST", body: payload });
   },
+  /** A private demo: the server makes a fresh account with sample keys and usage and signs us in. */
+  async startDemo() {
+    const data = await request("/api/auth/demo/", { method: "POST" });
+    localStorage.setItem(ACCESS_KEY, data.access);
+    localStorage.setItem(REFRESH_KEY, data.refresh);
+    return data;
+  },
   /** Exchange a Google ID token (from the Google button) for our JWT pair; creates the account on first use. */
   async loginWithGoogle(credential) {
     const data = await request("/api/auth/google/", { method: "POST", body: { credential } });

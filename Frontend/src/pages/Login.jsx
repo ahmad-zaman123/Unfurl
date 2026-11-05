@@ -7,8 +7,6 @@ import GoogleButton from "../components/GoogleButton.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 
-const DEMO_EMAIL = "demo@unfurl.app";
-const DEMO_PASSWORD = "demo1234";
 
 /** Where to go after signing in: the local path the session expired on, or the app's home. */
 function afterLogin(search, fallback) {
@@ -39,9 +37,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { state, search } = useLocation();
   const [isRegister, setIsRegister] = useState(Boolean(state?.register));
-  const [email, setEmail] = useState(state?.demo ? DEMO_EMAIL : "");
+  const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState(state?.demo ? DEMO_PASSWORD : "");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,15 +62,12 @@ export default function Login() {
     }
   }
 
-  /** One click: sign straight in as the shared demo user. */
+  /** One click: a private demo account with sample keys, just for this visitor. */
   async function useDemo() {
-    setIsRegister(false);
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
     setError("");
     setBusy(true);
     try {
-      await api.login(DEMO_EMAIL, DEMO_PASSWORD);
+      await api.startDemo();
       navigate(afterLogin(search, "/"));
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -194,7 +189,7 @@ export default function Login() {
               {isRegister ? "Already have an account? Sign in" : "New here? Create an account"}
             </button>
             <button type="button" className="link-btn" onClick={useDemo} disabled={busy}>
-              Use the demo account
+              Try the live demo
             </button>
           </div>
         </form>

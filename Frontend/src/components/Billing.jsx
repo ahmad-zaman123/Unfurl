@@ -150,7 +150,7 @@ export default function Billing({ onPlanChanged }) {
       </div>
 
       {!isPro && data.is_demo && (
-        <p className="note">The demo account is shared, so it can't be upgraded. Create a free account to try this.</p>
+        <p className="note">Demo accounts can't be upgraded. Create a free account to try this.</p>
       )}
       {data.test_mode && (
         <p className="note billing-note">

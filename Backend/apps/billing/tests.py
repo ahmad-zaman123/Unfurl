@@ -153,11 +153,12 @@ class CheckoutTests(BillingTestCase):
         self.assertEqual(self.user.plan, Plan.PRO)
 
     def test_demo_account_cannot_check_out(self):
-        self.user.email = DEMO_EMAIL
-        self.user.save()
-        response = self.client.post(CHECKOUT)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.data["detail"], DEMO_BILLING_LOCKED)
+        for email in (DEMO_EMAIL, "demo-abc123@demo.unfurl.app"):
+            self.user.email = email
+            self.user.save()
+            response = self.client.post(CHECKOUT)
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.data["detail"], DEMO_BILLING_LOCKED)
         self.assertEqual(self.stripe.calls, [])
 
     def test_stripe_outage_returns_502_without_leaking_details(self):
