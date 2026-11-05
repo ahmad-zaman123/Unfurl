@@ -42,6 +42,13 @@ The image itself isn't the interesting part. The platform around it is: hashed A
 |---|---|---|
 | Authenticated `POST` with title, template, theme, accent and logo | Public, signed, cacheable image URL for any `og:image` tag | Per-key usage, rate-limit headers and monthly quota in a dashboard |
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/console-dark.png" />
+    <img src="docs/screenshots/console.png" alt="The Unfurl console: edit a card and see the live preview, its signed URL and the API request behind it" width="860" />
+  </picture>
+</p>
+
 ## 🚀 Quick start
 
 **Prerequisites:** Python 3.11 and Node 20 (what CI uses). No Postgres or Redis needed locally: dev runs on SQLite and an in-memory cache.
@@ -187,6 +194,13 @@ Four templates and three themes, with a custom accent colour.
 </td>
 </tr>
 </table>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/usage-keys-dark.png" />
+    <img src="docs/screenshots/usage-keys.png" alt="Usage with monthly quota and daily calls, next to API keys shown by prefix only, some revoked" width="860" />
+  </picture>
+</p>
 
 ## 🔌 API
 
