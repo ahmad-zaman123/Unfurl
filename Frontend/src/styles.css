@@ -238,7 +238,7 @@ code { font-family: var(--code); font-size: 0.9em; }
 .landing-nav-links { display: flex; align-items: center; gap: 1.4rem; }
 .landing-main { flex: 1; align-content: center; width: min(78rem, 100%); margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 5vw, 3rem) 5rem; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
 @media (max-width: 62rem) { .landing-main { grid-template-columns: minmax(0, 1fr); } }
-.landing-title { margin: 0; font-size: clamp(2.3rem, 4.6vw, 3.7rem); line-height: 1.05; font-weight: 600; font-stretch: 104%; letter-spacing: -0.02em; text-wrap: balance; }
+.landing-title { margin: 0; font-size: clamp(2.3rem, 4.6vw, 3.7rem); line-height: 1.05; font-weight: 800; font-stretch: 104%; letter-spacing: -0.02em; text-wrap: balance; }
 .landing-lede { margin: 1.25rem 0 0; font-size: 1.15rem; line-height: 1.6; color: var(--ink-2); max-width: 34rem; }
 .landing-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
 .landing-code { margin-top: 2.2rem; max-width: 36rem; }
