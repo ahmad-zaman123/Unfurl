@@ -36,7 +36,7 @@ export default function ForgotPassword() {
       </header>
       <div className="auth-screen">
         <form className="auth-card" onSubmit={handleSubmit}>
-          <h1>Reset your password</h1>
+          <h1>Reset your password.</h1>
           {sent ? (
             <p className="auth-subtitle" role="status">
               {sent} It expires in 15 minutes, so check your spam folder if you don&apos;t see it.
