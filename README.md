@@ -20,7 +20,7 @@
   <sub>Click <b>Try the live demo</b> to get your own private console with API keys and two weeks of usage. No sign-up needed.</sub>
 </p>
 
-https://github.com/user-attachments/assets/a83ba263-5d2b-436d-b713-f0f5e2760d5e
+https://github.com/user-attachments/assets/cb819345-bc72-40ff-abcb-22a31736e4fb
 
 <p align="center">
   <a href="#-quick-start">Quick start</a> ·
