@@ -81,7 +81,7 @@ npm run dev
 
 | Key | Required | Notes |
 |---|---|---|
-| `SECRET_KEY` | **yes** | Django secret key. Use a long random string. |
+| `SECRET_KEY` | **yes** | Django secret key, which signs login tokens. Production refuses to start without a random value of 40+ characters. Make one with `python -c "import secrets; print(secrets.token_urlsafe(50))"`. |
 | `DATABASE_URL` | no | Defaults to `sqlite:///db.sqlite3`. Production: a Neon Postgres URL. |
 | `REDIS_URL` | prod | Rate-limit counters and the image cache. Empty means local memory, which is dev only. Format: `rediss://:<pass>@<host>:<port>`. |
 | `CARD_SIGNING_SECRET` | recommended | Secret that signs public image URLs. Falls back to `SECRET_KEY`. |
