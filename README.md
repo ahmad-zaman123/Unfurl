@@ -84,7 +84,7 @@ npm run dev
 | `SECRET_KEY` | **yes** | Django secret key, which signs login tokens. Production refuses to start without a random value of 40+ characters. Make one with `python -c "import secrets; print(secrets.token_urlsafe(50))"`. |
 | `DATABASE_URL` | no | Defaults to `sqlite:///db.sqlite3`. Production: a Neon Postgres URL. |
 | `REDIS_URL` | prod | Rate-limit counters and the image cache. Empty means local memory, which is dev only. Format: `rediss://:<pass>@<host>:<port>`. |
-| `CARD_SIGNING_SECRET` | recommended | Secret that signs public image URLs. Falls back to `SECRET_KEY`. |
+| `CARD_SIGNING_SECRET` | recommended | Secret that signs public image URLs. Falls back to `SECRET_KEY`. Give it its own random value and keep it: changing it breaks every card link already shared, including the og:image in `Frontend/index.html`. |
 | `UNFURL_PUBLIC_BASE_URL` | prod | Public origin used when building served image URLs. Defaults to the request host. |
 | `CORS_ALLOWED_ORIGINS` | no | Comma-separated frontend origins. Defaults to the local Vite server. |
 | `CSRF_TRUSTED_ORIGINS` | prod | Comma-separated, used by `config.settings.prod`. |
