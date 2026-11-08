@@ -198,7 +198,7 @@ Fixed-window limiter (atomic cache `incr`, Redis in prod) per key, returning `X-
 Pro is sold through Stripe Checkout, and Stripe's portal handles cards and cancelling. Webhooks are verified by signature and only say *something changed*: the app then reads the customer's current subscription back from Stripe, so duplicated or out-of-order events can't leave the wrong plan behind. A failed renewal keeps Pro while Stripe retries the card. Starting a second checkout closes the first, and anyone already subscribed is refused, even before their webhook arrives.
 
 ### 🛡️ SSRF-guarded logo fetching
-The `logo` parameter fetches a remote image. The fetcher resolves the host and rejects any non-public IP (loopback, private ranges, `169.254.x` cloud metadata), allows only `http(s)`, **refuses redirects** and caps size and time. A failed fetch just renders the card without a logo.
+The `logo` parameter fetches a remote image. The fetcher resolves the host once, rejects any non-public IP (loopback, private ranges, `169.254.x` cloud metadata, and IPv6 forms that hide them) and **connects to the address it checked**, so a second DNS answer can't swap in a private one. It allows only `http(s)`, **refuses redirects**, caps size and total download time, and checks an image's dimensions before decoding it, so a small file that unpacks to a huge picture is refused. Only PNG, JPEG, GIF and WebP are decoded. A failed fetch just renders the card without a logo.
 
 ### 🎨 Templates and themes
 Four templates and three themes, with a custom accent colour.

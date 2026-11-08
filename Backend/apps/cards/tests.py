@@ -1,8 +1,10 @@
 import socket
 from io import BytesIO
-from unittest.mock import MagicMock, patch
-from urllib.error import URLError
-from urllib.parse import parse_qsl, urlencode, urlsplit
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import patch
+from urllib.parse import parse_qsl, urlencode, urlparse, urlsplit
 
 from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -22,12 +24,6 @@ OG = "/api/v1/og"
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 
-def png_bytes(size=(4, 4)):
-    buffer = BytesIO()
-    Image.new("RGBA", size, (255, 0, 0, 255)).save(buffer, format="PNG")
-    return buffer.getvalue()
-
-
 def resolves_to(*ips):
     """Patch DNS so a host resolves to the given addresses, without touching the network."""
     return patch.object(
@@ -35,12 +31,41 @@ def resolves_to(*ips):
     )
 
 
-def fake_response(body, content_type="image/png"):
-    response = MagicMock()
-    response.headers = {"Content-Type": content_type}
-    response.read.side_effect = lambda limit=-1: body[:limit] if limit >= 0 else body
-    response.__enter__.return_value = response
-    return response
+def image_bytes(size=(4, 4), format="PNG"):
+    buffer = BytesIO()
+    Image.new("RGB", size, (255, 0, 0)).save(buffer, format=format)
+    return buffer.getvalue()
+
+
+def serves(body, content_type="image/png"):
+    """Pretend the remote server answered with this body, without touching the network."""
+    return patch.object(fetch, "_get", return_value=(content_type, body))
+
+
+class LocalServer:
+    """A real HTTP server on 127.0.0.1 for testing the connection itself. Each test sets how it answers."""
+
+    def __init__(self, answer):
+        seen = self.seen = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                seen.append(self.headers.get("Host"))
+                answer(self)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.port = self.server.server_address[1]
+
+    def __enter__(self):
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        return self
+
+    def __exit__(self, *exc):
+        self.server.shutdown()
+        self.server.server_close()
 
 
 class CardTestCase(TestCase):
@@ -188,7 +213,8 @@ class SafeFetchTests(SimpleTestCase):
     """The logo fetcher must never reach private networks or cloud metadata."""
 
     def test_only_http_and_https_are_allowed(self):
-        for url in ("file:///etc/passwd", "ftp://example.com/x.png", "gopher://example.com/", "http:///nohost"):
+        for url in ("file:///etc/passwd", "ftp://example.com/x.png", "gopher://example.com/", "http:///nohost",
+                    "https://example.com:99999/x.png"):
             with self.assertRaises(UnsafeFetchError, msg=url):
                 fetch_image(url)
 
@@ -204,68 +230,139 @@ class SafeFetchTests(SimpleTestCase):
             "::1",
             "fc00::1",
             "fe80::1",
+            "::ffff:127.0.0.1",  # IPv4 written as IPv6
+            "::ffff:169.254.169.254",
+            "64:ff9b::a9fe:a9fe",  # NAT64 form of 169.254.169.254
+            "2002:7f00:1::1",  # 6to4 form of 127.0.0.1
         ]
         for ip in blocked:
-            with resolves_to(ip), patch.object(fetch._opener, "open") as opener:
+            with resolves_to(ip), patch.object(fetch, "_get") as get:
                 with self.assertRaises(UnsafeFetchError, msg=ip):
                     fetch_image("https://logo.example.com/x.png")
-                opener.assert_not_called()
+                get.assert_not_called()
 
     def test_a_host_with_any_private_address_is_refused(self):
-        with resolves_to("93.184.216.34", "10.0.0.5"), patch.object(fetch._opener, "open") as opener:
+        with resolves_to("93.184.216.34", "10.0.0.5"), patch.object(fetch, "_get") as get:
             with self.assertRaises(UnsafeFetchError):
                 fetch_image("https://logo.example.com/x.png")
-        opener.assert_not_called()
+        get.assert_not_called()
 
     def test_unresolvable_hosts_are_refused(self):
         with patch.object(fetch.socket, "getaddrinfo", side_effect=socket.gaierror("nope")):
             with self.assertRaises(UnsafeFetchError):
                 fetch_image("https://no-such-host.example/x.png")
 
+    def test_the_host_is_resolved_once_and_the_checked_address_is_used(self):
+        # DNS rebinding: a second lookup could answer with a private address. There is no second lookup.
+        with resolves_to("93.184.216.34") as lookup, serves(image_bytes()) as get:
+            fetch_image("https://logo.example.com/x.png")
+        self.assertEqual(lookup.call_count, 1)
+        self.assertEqual(get.call_args.args[1], "93.184.216.34")
+
+    def test_the_connection_goes_to_the_checked_address_and_names_the_real_host(self):
+        def answer(handler):
+            body = image_bytes()
+            handler.send_response(200)
+            handler.send_header("Content-Type", "image/png")
+            handler.send_header("Content-Length", str(len(body)))
+            handler.end_headers()
+            handler.wfile.write(body)
+
+        real_lookup = socket.getaddrinfo
+        with LocalServer(answer) as server, patch.object(fetch.socket, "getaddrinfo", side_effect=real_lookup) as lookup:
+            content_type, body = fetch._get(urlparse(f"http://logo.example.com:{server.port}/x.png"), "127.0.0.1")
+        # The host name is never looked up again. Only the checked address is used.
+        self.assertNotIn("logo.example.com", [call.args[0] for call in lookup.call_args_list])
+        self.assertEqual((content_type, body[:8]), ("image/png", PNG_MAGIC))
+        self.assertEqual(server.seen, [f"logo.example.com:{server.port}"])
+
     def test_redirects_are_not_followed(self):
-        self.assertIsNone(fetch._NoRedirect().redirect_request(None, None, 302, "Found", {}, "http://127.0.0.1/"))
-        self.assertIn(fetch._NoRedirect, [type(h) for h in fetch._opener.handlers])
+        def answer(handler):
+            handler.send_response(302)
+            handler.send_header("Location", "http://169.254.169.254/latest/meta-data/")
+            handler.end_headers()
+
+        with LocalServer(answer) as server:
+            with self.assertRaises(UnsafeFetchError):
+                fetch._get(urlparse(f"http://logo.example.com:{server.port}/x.png"), "127.0.0.1")
+        self.assertEqual(len(server.seen), 1)
+
+    def test_a_server_that_trickles_bytes_is_cut_off(self):
+        def answer(handler):
+            handler.send_response(200)
+            handler.send_header("Content-Type", "image/png")
+            handler.end_headers()
+            try:
+                for _ in range(50):
+                    handler.wfile.write(b"x" * 64 * 1024)
+                    handler.wfile.flush()
+                    time.sleep(0.1)
+            except OSError:
+                pass  # the fetcher hung up, as it should
+
+        with LocalServer(answer) as server, patch.object(fetch, "FETCH_TIMEOUT", 0.25):
+            started = time.monotonic()
+            with self.assertRaises(UnsafeFetchError):
+                fetch._get(urlparse(f"http://logo.example.com:{server.port}/x.png"), "127.0.0.1")
+        self.assertLess(time.monotonic() - started, 2)
 
     def test_a_public_image_is_fetched(self):
-        with resolves_to("93.184.216.34"), patch.object(fetch._opener, "open", return_value=fake_response(png_bytes())) as opener:
+        with resolves_to("93.184.216.34"), serves(image_bytes()):
             image = fetch_image("https://logo.example.com/x.png")
         self.assertEqual((image.mode, image.size), ("RGBA", (4, 4)))
-        request = opener.call_args.args[0]
-        self.assertEqual(request.get_header("User-agent"), "Unfurl/1.0")
-        self.assertEqual(opener.call_args.kwargs["timeout"], fetch.FETCH_TIMEOUT)
 
     def test_non_images_are_refused(self):
-        with resolves_to("93.184.216.34"), patch.object(
-            fetch._opener, "open", return_value=fake_response(b"<html></html>", "text/html")
-        ):
+        def answer(handler):
+            handler.send_response(200)
+            handler.send_header("Content-Type", "text/html")
+            handler.end_headers()
+            handler.wfile.write(b"<html></html>")
+
+        with LocalServer(answer) as server:
+            with self.assertRaises(UnsafeFetchError):
+                fetch._get(urlparse(f"http://logo.example.com:{server.port}/x.png"), "127.0.0.1")
+
+    def test_oversized_files_are_refused(self):
+        with resolves_to("93.184.216.34"), serves(b"\0" * (MAX_IMAGE_BYTES + 10)):
             with self.assertRaises(UnsafeFetchError):
                 fetch_image("https://logo.example.com/x.png")
 
-    def test_oversized_images_are_refused(self):
-        body = b"\0" * (MAX_IMAGE_BYTES + 10)
-        with resolves_to("93.184.216.34"), patch.object(fetch._opener, "open", return_value=fake_response(body)):
-            with self.assertRaises(UnsafeFetchError):
+    def test_a_small_file_that_unpacks_to_a_huge_picture_is_refused_before_decoding(self):
+        bomb = image_bytes((5000, 5000))
+        self.assertLess(len(bomb), MAX_IMAGE_BYTES)
+        with resolves_to("93.184.216.34"), serves(bomb), patch.object(Image.Image, "load") as load:
+            with self.assertRaisesMessage(UnsafeFetchError, "too large"):
                 fetch_image("https://logo.example.com/x.png")
+        load.assert_not_called()
+
+    def test_only_common_web_image_formats_are_decoded(self):
+        for format in ("PNG", "JPEG", "GIF", "WEBP"):
+            with resolves_to("93.184.216.34"), serves(image_bytes(format=format)):
+                self.assertEqual(fetch_image("https://logo.example.com/x.png").size, (4, 4), format)
+        for format in ("BMP", "TIFF", "ICO"):
+            with resolves_to("93.184.216.34"), serves(image_bytes(format=format)):
+                with self.assertRaises(UnsafeFetchError, msg=format):
+                    fetch_image("https://logo.example.com/x.png")
 
     def test_broken_images_and_network_errors_are_refused(self):
         with resolves_to("93.184.216.34"):
-            with patch.object(fetch._opener, "open", return_value=fake_response(b"not really a png")):
+            with serves(b"not really a png"):
                 with self.assertRaises(UnsafeFetchError):
                     fetch_image("https://logo.example.com/x.png")
-            with patch.object(fetch._opener, "open", side_effect=URLError("timed out")):
-                with self.assertRaises(UnsafeFetchError):
-                    fetch_image("https://logo.example.com/x.png")
+        # Nothing listens on this port, so the connection itself fails.
+        with LocalServer(lambda handler: None) as server:
+            port = server.port
+        with self.assertRaises(UnsafeFetchError):
+            fetch._get(urlparse(f"http://logo.example.com:{port}/x.png"), "127.0.0.1")
 
     def test_a_blocked_logo_still_renders_the_card(self):
-        with resolves_to("169.254.169.254"), patch.object(fetch._opener, "open") as opener:
+        with resolves_to("169.254.169.254"), patch.object(fetch, "_get") as get:
             png = render_card(title="Hello", logo="https://logo.example.com/x.png")
         self.assertTrue(png.startswith(PNG_MAGIC))
-        opener.assert_not_called()
+        get.assert_not_called()
 
     def test_a_good_logo_is_drawn_on_the_card(self):
-        with resolves_to("93.184.216.34"), patch.object(
-            fetch._opener, "open", return_value=fake_response(png_bytes((200, 200)))
-        ):
+        with resolves_to("93.184.216.34"), serves(image_bytes((200, 200))):
             with_logo = render_card(title="Hello", theme="light", logo="https://logo.example.com/x.png")
         without = render_card(title="Hello", theme="light")
         self.assertNotEqual(with_logo, without)
