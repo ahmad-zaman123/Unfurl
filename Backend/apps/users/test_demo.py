@@ -12,6 +12,7 @@ from apps.users.constants import DEMO_EMAIL, DEMO_FULL, DEMO_LIMITS, DEMO_PASSWO
 from apps.users.demo import DEMO_DOMAIN, DEMO_LIFETIME, PURGE_BATCH, USAGE, is_demo_email
 from apps.users.models import User
 from apps.users.serializers import UserSerializer
+from apps.users.tests import tokens_of
 
 DEMO = "/api/auth/demo/"
 
@@ -28,12 +29,12 @@ class DemoTests(TestCase):
         return {"HTTP_AUTHORIZATION": f"Bearer {access}"}
 
     def test_me_says_whether_the_account_is_a_demo(self):
-        me = self.client.get("/api/auth/me/", **self.auth(self.start().json()["access"])).json()
+        me = self.client.get("/api/auth/me/", **self.auth(tokens_of(self.start())["access"])).json()
         self.assertIs(me["is_demo"], True)
         self.assertIs(UserSerializer(User(email="sara@example.com")).data["is_demo"], False)
 
     def demo_user(self, response):
-        email = self.client.get("/api/auth/me/", **self.auth(response.json()["access"])).json()["email"]
+        email = self.client.get("/api/auth/me/", **self.auth(tokens_of(response)["access"])).json()["email"]
         return User.objects.get(email=email)
 
     def test_demo_signs_in_a_new_user_with_keys_and_usage(self):
@@ -49,8 +50,8 @@ class DemoTests(TestCase):
         self.assertEqual(max(d.date for d in days), timezone.now().date())
 
     def test_each_visitor_sees_only_their_own_keys(self):
-        first = self.start().json()["access"]
-        second = self.start().json()["access"]
+        first = tokens_of(self.start())["access"]
+        second = tokens_of(self.start())["access"]
         mine = self.client.get("/api/keys/", **self.auth(first)).json()
         theirs = self.client.get("/api/keys/", **self.auth(second)).json()
         ids = lambda keys: {k["id"] for k in keys}  # noqa: E731
@@ -92,7 +93,7 @@ class DemoTests(TestCase):
         self.assertEqual(User.objects.filter(email__endswith="@" + DEMO_DOMAIN).count(), 4)
 
     def test_demo_cannot_set_a_password(self):
-        access = self.start().json()["access"]
+        access = tokens_of(self.start())["access"]
         response = self.client.post(
             "/api/auth/password/", {"new_password": "a-new-password-1"}, format="json", **self.auth(access)
         )

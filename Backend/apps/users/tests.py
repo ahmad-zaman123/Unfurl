@@ -16,6 +16,12 @@ PASSWORD = "first-password-1"
 NEW_PASSWORD = "second-password-2"
 
 
+def tokens_of(response):
+    """The tokens a sign-in reply set as httpOnly cookies. The body never carries them."""
+    assert "access" not in response.json() and "refresh" not in response.json()
+    return {name: response.cookies[f"{name}_token"].value for name in ("access", "refresh") if f"{name}_token" in response.cookies}
+
+
 @override_settings(EMAIL_HOST="smtp.example", APP_URL="https://app.example")
 class PasswordResetTests(TestCase):
     def setUp(self):
@@ -77,14 +83,14 @@ class PasswordResetTests(TestCase):
         self.assertEqual(reused.json()["detail"], [RESET_INVALID])
 
     def test_reset_ends_existing_sessions(self):
-        tokens = self.sign_in().json()
+        tokens = tokens_of(self.sign_in())
         self.assertEqual(self.me(tokens["access"]).status_code, 200)
         self.forgot()
         self.reset(self.link_parts())
         self.assertEqual(self.me(tokens["access"]).status_code, 401)
         refreshed = self.client.post("/api/auth/token/refresh/", {"refresh": tokens["refresh"]}, format="json")
         if refreshed.status_code == 200:
-            self.assertEqual(self.me(refreshed.json()["access"]).status_code, 401)
+            self.assertEqual(self.me(tokens_of(refreshed)["access"]).status_code, 401)
 
     def test_expired_link_is_refused(self):
         self.forgot()
@@ -151,9 +157,9 @@ class PasswordResetTests(TestCase):
 
     def test_demo_password_cannot_be_changed(self):
         User.objects.create_user(email=DEMO_EMAIL, password="demo1234")
-        access = self.client.post(
-            "/api/auth/token/", {"email": DEMO_EMAIL, "password": "demo1234"}, format="json"
-        ).json()["access"]
+        access = tokens_of(
+            self.client.post("/api/auth/token/", {"email": DEMO_EMAIL, "password": "demo1234"}, format="json")
+        )["access"]
         response = self.client.post(
             "/api/auth/password/",
             {"current_password": "demo1234", "new_password": NEW_PASSWORD},
@@ -166,7 +172,7 @@ class PasswordResetTests(TestCase):
         self.assertEqual(self.me(access).status_code, 200)
 
     def test_change_password_ends_old_sessions_but_returns_a_new_one(self):
-        old = self.sign_in().json()
+        old = tokens_of(self.sign_in())
         response = self.client.post(
             "/api/auth/password/",
             {"current_password": PASSWORD, "new_password": NEW_PASSWORD},
@@ -175,7 +181,7 @@ class PasswordResetTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.me(old["access"]).status_code, 401)
-        self.assertEqual(self.me(response.json()["access"]).status_code, 200)
+        self.assertEqual(self.me(tokens_of(response)["access"]).status_code, 200)
 
 
 class BrokenBackend:

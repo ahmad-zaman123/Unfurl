@@ -8,7 +8,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.apikeys.authentication import ApiKeyAuthentication
 from apps.apikeys.models import ApiKey, KeyUsageDay
@@ -22,6 +21,7 @@ from apps.cards.serializers import CardSpecSerializer
 from apps.cards.services.cache import get_cached_png, record_hit, record_miss, store_png
 from apps.cards.services.renderer import render_card
 from apps.cards.services.signing import sign, verify
+from apps.users.cookies import CookieJWTAuthentication
 
 OG_PATH = "/api/v1/og"
 
@@ -36,7 +36,7 @@ def _public_base(request):
 class CardCreateAPIView(APIView):
     """Authenticated: validate a card spec and return a signed, public image URL."""
 
-    authentication_classes = (ApiKeyAuthentication, JWTAuthentication)
+    authentication_classes = (ApiKeyAuthentication, CookieJWTAuthentication)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):

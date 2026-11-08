@@ -71,7 +71,7 @@ python manage.py runserver 8010
 ```bash
 cd Frontend
 npm install
-cp .env.example .env              # VITE_API_URL=http://127.0.0.1:8010
+cp .env.example .env              # the dev server proxies /api to VITE_API_URL (http://127.0.0.1:8010)
 npm run dev
 ```
 
@@ -92,7 +92,7 @@ npm run dev
 | `GOOGLE_CLIENT_ID` | no | Turns on "Continue with Google" on the sign-in page. See **Google sign-in** below. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` | no | Turn on Pro upgrades through Stripe. See **Stripe billing** below. |
 
-Frontend: `VITE_API_URL` points at the backend; `VITE_GOOGLE_CLIENT_ID` is the same Google client id, only needed for the Google button.
+Frontend: `VITE_API_URL` is the backend's public address, shown in the curl examples and used by the Vite dev server to proxy `/api`. The deployed frontend reaches the API through the `/api/*` rewrite in `Frontend/vercel.json`, so the dashboard's login cookies belong to the site itself. `VITE_GOOGLE_CLIENT_ID` is the same Google client id, only needed for the Google button.
 
 </details>
 
@@ -183,7 +183,7 @@ A crawler fetching an `og:image` does a bare `GET` with no headers, so an authen
 The served URL carries a signature over its parameters. Any unsigned or tampered request gets a `403`. The signature doubles as the cache key, so identical cards render once and then serve from cache (`X-Cache: HIT`).
 
 ### 🔑 API keys done like Stripe
-Stored as a **SHA-256 hash** with only a display prefix (`sk_live_ab12…`). The raw key is shown exactly once. A custom DRF authentication class handles `Authorization: Bearer sk_…` and coexists with the dashboard's JWT.
+Stored as a **SHA-256 hash** with only a display prefix (`sk_live_ab12…`). The raw key is shown exactly once. A custom DRF authentication class handles `Authorization: Bearer sk_…` and coexists with the dashboard's JWT, which lives in httpOnly cookies that page scripts can't read.
 
 ### 📈 Usage analytics
 A React dashboard shows total and daily calls, usage per key, cache stats and your monthly quota against your plan.
@@ -251,7 +251,7 @@ Drop the returned `url` into `<meta property="og:image" content="…">`.
 | `GET /api/usage/` | JWT | Usage analytics |
 | `GET /api/billing/`, `POST /api/billing/checkout/`, `/api/billing/portal/` | JWT | Plan status, Stripe Checkout and the customer portal |
 | `POST /api/billing/webhook/` | Stripe signature | Subscription updates from Stripe |
-| `POST /api/auth/register/`, `/auth/demo/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions |
+| `POST /api/auth/register/`, `/auth/demo/`, `/auth/token/`, `/auth/token/refresh/`, `/auth/logout/`, `/auth/google/`, `/auth/password/`, `/auth/password/forgot/`, `/auth/password/reset/`, `GET /auth/me/` | none / JWT | Accounts and sessions. Tokens are set as httpOnly cookies (`access_token`, `refresh_token`), never returned in the body; an `Authorization: Bearer` header works too. |
 
 ## 🚦 Limits
 
