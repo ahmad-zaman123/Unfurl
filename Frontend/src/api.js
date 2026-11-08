@@ -27,10 +27,13 @@ export function ogImageUrl(params) {
   return url.toString();
 }
 
-/** Forget the session here and ask the server to clear its cookies. */
+/** Forget the session here and ask the server to clear its cookies; await it before leaving the page. */
 export function logout() {
   localStorage.removeItem(SIGNED_IN);
-  fetch("/api/auth/logout/", { method: "POST" }).catch(() => {});
+  return fetch("/api/auth/logout/", { method: "POST" }).then(
+    () => {},
+    () => {},
+  );
 }
 
 function extractError(data) {

@@ -35,8 +35,9 @@ export default function Dashboard() {
 
   const refreshUsage = useCallback(() => setUsageVersion((version) => version + 1), []);
 
-  function handleLogout() {
-    logout();
+  // Wait for the server to clear the cookies, so closing the tab right away can't leave the session alive.
+  async function handleLogout() {
+    await logout();
     navigate("/login");
   }
 
