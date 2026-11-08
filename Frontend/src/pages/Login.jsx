@@ -11,7 +11,14 @@ import { useDocumentTitle } from "../utils/useDocumentTitle.js";
 /** Where to go after signing in: the local path the session expired on, or the app's home. */
 function afterLogin(search, fallback) {
   const next = new URLSearchParams(search).get("next") || "";
-  return next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+  if (!next.startsWith("/")) return fallback;
+  try {
+    // Browsers read "/\x" and "/<tab>/x" as another site, so the address is resolved and kept only if it stays here.
+    const url = new URL(next, window.location.origin);
+    return url.origin === window.location.origin ? url.pathname + url.search + url.hash : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function EyeIcon({ off }) {
